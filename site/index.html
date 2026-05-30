@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0"
+    />
+    <title>SimApply</title>
+    <meta
+      name="description"
+      content="SimApply is an AI-powered Chrome extension that helps job seekers tailor resumes to specific job descriptions with review highlights, guided rewrites, and an editable side-panel workspace."
+    />
+    <meta
+      property="og:title"
+      content="SimApply | AI-Powered Resume Tailoring"
+    />
+    <meta
+      property="og:description"
+      content="Upload a resume, compare it to a job description, review AI suggestions, and refine your final draft in one focused side-panel workflow."
+    />
+    <meta property="og:type" content="website" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="topbar">
+        <a class="brand" href="#top" aria-label="SimApply home">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M15.8 6.5C16.1 6.5 16.3 6.7 16.4 7L17.8 13.1C17.9 13.6 18.3 14 18.8 14.1L24.9 15.5C25.2 15.6 25.4 15.8 25.4 16.1C25.4 16.4 25.2 16.6 24.9 16.7L18.8 18.1C18.3 18.2 17.9 18.6 17.8 19.1L16.4 25.2C16.3 25.5 16.1 25.7 15.8 25.7C15.5 25.7 15.3 25.5 15.2 25.2L13.8 19.1C13.7 18.6 13.3 18.2 12.8 18.1L6.7 16.7C6.4 16.6 6.2 16.4 6.2 16.1C6.2 15.8 6.4 15.6 6.7 15.5L12.8 14.1C13.3 14 13.7 13.6 13.8 13.1L15.2 7C15.3 6.7 15.5 6.5 15.8 6.5Z"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path d="M23.9 6.2V10.4" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
+              <path d="M21.8 8.3H26" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
+              <path d="M9.2 22.2V25.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" />
+              <path d="M7.7 23.7H10.7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" />
+            </svg>
+          </span>
+          <span class="brand-wordmark">SimApply</span>
+        </a>
+
+        <nav class="topnav">
+          <a href="#how-it-works">How it works</a>
+          <a href="#features">Features</a>
+          <a href="#faq">FAQ</a>
+        </nav>
+      </header>
+
+      <main id="top">
+        <section class="hero">
+          <div class="hero-copy">
+            <p class="eyebrow">AI-powered resume tailoring for real job applications</p>
+            <h1>
+              Review your resume against a role, apply guided rewrites, and
+              refine the final draft in one calm side panel.
+            </h1>
+            <p class="hero-text">
+              SimApply helps job seekers upload a resume, compare it to a job
+              description, review AI suggestions on the original document, and
+              edit a stronger version before exporting.
+            </p>
+
+            <div class="hero-actions">
+              <a class="primary-button" href="https://chrome.google.com/webstore" target="_blank" rel="noreferrer">
+                Add to Chrome
+              </a>
+              <a class="secondary-button" href="https://github.com" target="_blank" rel="noreferrer">
+                View GitHub
+              </a>
+            </div>
+
+            <p class="helper-note">
+              Chrome Web Store link placeholder for now. Replace this with your
+              real listing once SimApply is published.
+            </p>
+          </div>
+
+          <div class="hero-panel">
+            <div class="app-mock">
+              <div class="mock-toolbar">
+                <span class="dot"></span>
+                <span class="dot"></span>
+                <span class="dot"></span>
+              </div>
+              <div class="mock-stage">
+                <div class="mock-card mock-card-dark">
+                  <div class="mini-mark" aria-hidden="true"></div>
+                  <div>
+                    <h3>SimApply</h3>
+                    <p>Focused side-panel resume tailoring workflow</p>
+                  </div>
+                </div>
+
+                <div class="mock-card">
+                  <p class="mock-label">Original Resume Review</p>
+                  <div class="mock-line mock-line-good"></div>
+                  <div class="mock-line mock-line-warn"></div>
+                  <div class="mock-line mock-line-fix"></div>
+                  <div class="mock-line mock-line-good short"></div>
+                </div>
+
+                <div class="mock-card">
+                  <p class="mock-label">Guided Rewrite</p>
+                  <div class="pill-row">
+                    <span class="pill">Email support</span>
+                    <span class="pill">Customer follow-up</span>
+                    <span class="pill">CRM</span>
+                  </div>
+                  <div class="rewrite-box">
+                    Reworked customer support bullet with clearer role
+                    alignment, stronger wording, and more specific impact.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="how-it-works" class="content-section">
+          <div class="section-heading">
+            <p class="eyebrow">How it works</p>
+            <h2>Built for fast tailoring, not busywork</h2>
+          </div>
+
+          <div class="step-grid">
+            <article class="step-card">
+              <span class="step-number">01</span>
+              <h3>Upload your resume</h3>
+              <p>Use a PDF or paste resume text to open the workspace.</p>
+            </article>
+            <article class="step-card">
+              <span class="step-number">02</span>
+              <h3>Add the job description</h3>
+              <p>Give SimApply the target role so feedback stays relevant.</p>
+            </article>
+            <article class="step-card">
+              <span class="step-number">03</span>
+              <h3>Review AI guidance</h3>
+              <p>See highlighted strengths, improvements, and guided rewrites.</p>
+            </article>
+            <article class="step-card">
+              <span class="step-number">04</span>
+              <h3>Edit and export</h3>
+              <p>Apply what works, refine the draft, and export the final version.</p>
+            </article>
+          </div>
+        </section>
+
+        <section id="features" class="content-section">
+          <div class="section-heading">
+            <p class="eyebrow">Features</p>
+            <h2>What SimApply already does</h2>
+          </div>
+
+          <div class="feature-grid">
+            <article class="feature-card">
+              <h3>Original resume review</h3>
+              <p>
+                Review AI highlights on the uploaded resume instead of only on a
+                rewritten draft.
+              </p>
+            </article>
+            <article class="feature-card">
+              <h3>Guided rewrites</h3>
+              <p>
+                Ask for focused improvements like ATS-friendly wording or
+                customer support emphasis.
+              </p>
+            </article>
+            <article class="feature-card">
+              <h3>Edit workspace</h3>
+              <p>
+                Adjust margins, spacing, fonts, links, and content in the edit
+                tab before export.
+              </p>
+            </article>
+            <article class="feature-card">
+              <h3>Judgment-first AI</h3>
+              <p>
+                Suggestions are there to help, not replace judgment. Users can
+                apply what fits and ignore what does not.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section id="faq" class="content-section">
+          <div class="section-heading">
+            <p class="eyebrow">FAQ</p>
+            <h2>Good to know</h2>
+          </div>
+
+          <div class="faq-list">
+            <article class="faq-item">
+              <h3>Does SimApply preserve formatting perfectly?</h3>
+              <p>
+                Not yet. This is still an MVP, so layout, spacing, and styling
+                can shift during editing and export.
+              </p>
+            </article>
+            <article class="faq-item">
+              <h3>Does AI rewrite my entire resume automatically?</h3>
+              <p>
+                It can suggest targeted rewrites and guided whole-resume drafts,
+                but users should still review and refine the final version.
+              </p>
+            </article>
+            <article class="faq-item">
+              <h3>Will there be usage limits?</h3>
+              <p>
+                Yes. AI limits and a possible bring-your-own-key flow are part
+                of the planned roadmap.
+              </p>
+            </article>
+          </div>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>
