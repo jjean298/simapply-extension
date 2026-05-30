@@ -116,6 +116,23 @@
               <button class="tab-button" data-tab="preview">Preview</button>
             </div>
 
+            <div class="workspace-note-grid">
+              <div class="workspace-note">
+                <p class="eyebrow small">Formatting note</p>
+                <p>
+                  This demo preserves the workflow best, but layout, spacing,
+                  and styling can still shift while you edit.
+                </p>
+              </div>
+              <div class="workspace-note">
+                <p class="eyebrow small">Use your judgment</p>
+                <p>
+                  AI suggestions are meant to help, not replace judgment. Use
+                  what fits your experience and ignore what does not.
+                </p>
+              </div>
+            </div>
+
             <section id="assistant-tab" class="tab-panel active">
               <div class="match-summary-card">
                 <div>
@@ -180,6 +197,14 @@
                     <h3>Refine the working draft</h3>
                   </div>
                 </div>
+                <div class="editor-toolbar">
+                  <button class="toolbar-button" data-format="bold">Bold</button>
+                  <button class="toolbar-button" data-format="italic">Italic</button>
+                  <button class="toolbar-button" data-format="underline">Underline</button>
+                  <button class="toolbar-button" data-format="bullet">Bullet</button>
+                  <button class="toolbar-button" data-format="center">Center</button>
+                  <button class="toolbar-button" data-format="link">Link</button>
+                </div>
                 <textarea id="edit-text" class="editor-textarea"></textarea>
               </div>
             </section>
@@ -193,7 +218,7 @@
                   </div>
                 </div>
                 <div class="preview-paper">
-                  <pre id="preview-text" class="preview-text"></pre>
+                  <div id="preview-text" class="preview-text"></div>
                 </div>
               </div>
             </section>

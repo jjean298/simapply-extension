@@ -30,6 +30,7 @@ const elements = {
   continueButton: document.getElementById("continue-button"),
   startOver: document.getElementById("start-over"),
   tabButtons: Array.from(document.querySelectorAll(".tab-button")),
+  toolbarButtons: Array.from(document.querySelectorAll(".toolbar-button")),
   tabPanels: {
     assistant: document.getElementById("assistant-tab"),
     edit: document.getElementById("edit-tab"),
@@ -56,6 +57,15 @@ function escapeHtml(value) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;")
+}
+
+function renderInlineFormatting(text) {
+  return escapeHtml(text)
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g, '<a href="$2" target="_blank" rel="noreferrer">$1</a>')
+    .replace(/\*\*\*([^*]+)\*\*\*/g, "<strong><em>$1</em></strong>")
+    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+    .replace(/\*([^*]+)\*/g, "<em>$1</em>")
+    .replace(/__([^_]+)__/g, "<u>$1</u>")
 }
 
 function getToneClass(tone) {
@@ -177,7 +187,121 @@ function applySuggestion(item, nextText) {
 }
 
 function renderPreview() {
-  elements.previewText.textContent = state.editedResumeText
+  const lines = state.editedResumeText.split("\n")
+  const parts = []
+  let currentList = []
+
+  function flushList() {
+    if (!currentList.length) return
+    parts.push(`<ul>${currentList.join("")}</ul>`)
+    currentList = []
+  }
+
+  lines.forEach((line) => {
+    const trimmed = line.trim()
+
+    if (!trimmed) {
+      flushList()
+      return
+    }
+
+    const isCentered = trimmed.startsWith("[CENTER]")
+    const centeredText = isCentered ? trimmed.replace("[CENTER]", "").trim() : trimmed
+    const formatted = renderInlineFormatting(centeredText)
+
+    if (/^[•-]\s*/.test(centeredText)) {
+      currentList.push(
+        `<li>${formatted.replace(/^[•-]\s*/, "")}</li>`
+      )
+      return
+    }
+
+    flushList()
+    parts.push(
+      `<p class="${isCentered ? "preview-centered" : ""}">${formatted}</p>`
+    )
+  })
+
+  flushList()
+  elements.previewText.innerHTML = parts.join("")
+}
+
+function wrapSelection(prefix, suffix = prefix) {
+  const textarea = elements.editText
+  const start = textarea.selectionStart
+  const end = textarea.selectionEnd
+  const selected = textarea.value.slice(start, end)
+  const replacement = `${prefix}${selected}${suffix}`
+
+  textarea.setRangeText(replacement, start, end, "select")
+  state.editedResumeText = textarea.value
+  renderPreview()
+}
+
+function applyLinePrefix(prefix) {
+  const textarea = elements.editText
+  const start = textarea.selectionStart
+  const end = textarea.selectionEnd
+  const value = textarea.value
+  const lineStart = value.lastIndexOf("\n", start - 1) + 1
+  const lineEnd = value.indexOf("\n", end)
+  const sliceEnd = lineEnd === -1 ? value.length : lineEnd
+  const block = value.slice(lineStart, sliceEnd)
+  const nextBlock = block
+    .split("\n")
+    .map((line) => (line.trim() ? `${prefix}${line}` : line))
+    .join("\n")
+
+  textarea.setRangeText(nextBlock, lineStart, sliceEnd, "select")
+  state.editedResumeText = textarea.value
+  renderPreview()
+}
+
+function applyToolbarAction(format) {
+  elements.editText.focus()
+
+  if (format === "bold") {
+    wrapSelection("**")
+    return
+  }
+
+  if (format === "italic") {
+    wrapSelection("*")
+    return
+  }
+
+  if (format === "underline") {
+    wrapSelection("__")
+    return
+  }
+
+  if (format === "bullet") {
+    applyLinePrefix("• ")
+    return
+  }
+
+  if (format === "center") {
+    applyLinePrefix("[CENTER]")
+    return
+  }
+
+  if (format === "link") {
+    const url = window.prompt("Paste the URL to attach to this text:")
+    if (!url) return
+    const normalizedUrl = /^https?:\/\//i.test(url) ? url : `https://${url}`
+    const textarea = elements.editText
+    const start = textarea.selectionStart
+    const end = textarea.selectionEnd
+    const selected = textarea.value.slice(start, end) || "Link text"
+    textarea.setRangeText(
+      `[${selected}](${normalizedUrl})`,
+      start,
+      end,
+      "select"
+    )
+    state.editedResumeText = textarea.value
+    renderPreview()
+  }
 }
 
 function renderKeywords() {
@@ -503,6 +627,12 @@ elements.tabButtons.forEach((button) => {
 elements.editText.addEventListener("input", () => {
   state.editedResumeText = elements.editText.value
   renderPreview()
+})
+
+elements.toolbarButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    applyToolbarAction(button.dataset.format)
+  })
 })
 
 elements.guidedSubmit.addEventListener("click", handleGuidedRequest)
