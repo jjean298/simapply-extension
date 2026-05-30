@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SimApply Demo</title>
+    <meta
+      name="description"
+      content="Try the SimApply browser demo: upload or paste a resume, compare it to a job description, and review AI-powered rewrite suggestions."
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="demo-shell">
+      <header class="demo-topbar">
+        <a class="brand" href="../" aria-label="Back to SimApply home">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M15.8 6.5C16.1 6.5 16.3 6.7 16.4 7L17.8 13.1C17.9 13.6 18.3 14 18.8 14.1L24.9 15.5C25.2 15.6 25.4 15.8 25.4 16.1C25.4 16.4 25.2 16.6 24.9 16.7L18.8 18.1C18.3 18.2 17.9 18.6 17.8 19.1L16.4 25.2C16.3 25.5 16.1 25.7 15.8 25.7C15.5 25.7 15.3 25.5 15.2 25.2L13.8 19.1C13.7 18.6 13.3 18.2 12.8 18.1L6.7 16.7C6.4 16.6 6.2 16.4 6.2 16.1C6.2 15.8 6.4 15.6 6.7 15.5L12.8 14.1C13.3 14 13.7 13.6 13.8 13.1L15.2 7C15.3 6.7 15.5 6.5 15.8 6.5Z"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path d="M23.9 6.2V10.4" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
+              <path d="M21.8 8.3H26" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
+              <path d="M9.2 22.2V25.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" />
+              <path d="M7.7 23.7H10.7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" />
+            </svg>
+          </span>
+          <span class="brand-meta">
+            <span class="brand-wordmark">SimApply</span>
+            <span class="brand-subtitle">Live demo</span>
+          </span>
+        </a>
+
+        <div class="topbar-links">
+          <a href="https://github.com/jjean298/simapply-extension" target="_blank" rel="noreferrer">
+            View GitHub
+          </a>
+        </div>
+      </header>
+
+      <main id="app" class="app-frame">
+        <section class="hero-card">
+          <p class="eyebrow">Browser demo</p>
+          <h1>Try the SimApply workflow without installing the extension.</h1>
+          <p class="hero-copy">
+            Upload a PDF or paste resume text, add a job description, review AI
+            feedback, and apply rewrites into an editable draft.
+          </p>
+          <div class="note-grid">
+            <div class="note-card">
+              <h2>Formatting note</h2>
+              <p>
+                This demo focuses on the workflow and AI guidance. Formatting may
+                shift during editing and preview.
+              </p>
+            </div>
+            <div class="note-card">
+              <h2>Use your judgment</h2>
+              <p>
+                AI suggestions are meant to help, not replace your judgment. Use
+                what fits your experience and ignore what does not.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section class="workspace-shell">
+          <div id="upload-view" class="upload-view">
+            <div class="input-mode">
+              <button class="mode-button active" data-mode="upload">Upload PDF</button>
+              <button class="mode-button" data-mode="paste">Paste Resume</button>
+            </div>
+
+            <div id="upload-panel" class="panel-card">
+              <label class="field-label">Resume</label>
+              <label class="upload-dropzone" for="resume-file">
+                <input id="resume-file" type="file" accept=".pdf" hidden />
+                <span id="file-name" class="file-name">Choose a PDF resume</span>
+                <span class="file-help">Upload a PDF to extract the text into the demo workspace.</span>
+              </label>
+            </div>
+
+            <div id="paste-panel" class="panel-card hidden">
+              <label class="field-label" for="resume-text">Resume</label>
+              <textarea id="resume-text" class="text-area tall" placeholder="Paste your resume text here..."></textarea>
+            </div>
+
+            <div class="panel-card">
+              <label class="field-label" for="job-description">Job description (optional)</label>
+              <textarea id="job-description" class="text-area" placeholder="Paste the job description here for tailored feedback..."></textarea>
+            </div>
+
+            <div class="actions-row">
+              <button id="continue-button" class="primary-button wide-button" disabled>
+                Continue to Workspace
+              </button>
+            </div>
+          </div>
+
+          <div id="workspace-view" class="hidden">
+            <div class="workspace-header">
+              <div>
+                <h2>SimApply workspace</h2>
+                <p>Review the draft, edit content, and ask for guided improvements.</p>
+              </div>
+              <button id="start-over" class="ghost-button">Start over</button>
+            </div>
+
+            <div class="tab-row">
+              <button class="tab-button active" data-tab="assistant">AI Assistant</button>
+              <button class="tab-button" data-tab="edit">Edit</button>
+              <button class="tab-button" data-tab="preview">Preview</button>
+            </div>
+
+            <section id="assistant-tab" class="tab-panel active">
+              <div class="match-summary-card">
+                <div>
+                  <p class="eyebrow small">Match summary</p>
+                  <h3 id="match-label">Waiting</h3>
+                  <p id="match-summary" class="muted-copy">
+                    AI analysis will appear here once your resume is reviewed.
+                  </p>
+                </div>
+                <span id="match-tone-pill" class="tone-pill tone-medium">Waiting</span>
+              </div>
+
+              <div class="guided-card">
+                <div class="guided-header">
+                  <div>
+                    <p class="eyebrow small">Ask SimApply</p>
+                    <h3>Make a focused request</h3>
+                  </div>
+                  <div class="preset-row">
+                    <button class="preset-pill" data-request="Make this more ATS-friendly">ATS-friendly</button>
+                    <button class="preset-pill" data-request="Emphasize email support experience">Email support</button>
+                    <button class="preset-pill" data-request="Make my bullets more metric-driven">Metric-driven</button>
+                    <button class="preset-pill" data-request="Rewrite this for customer support roles">Customer support</button>
+                  </div>
+                </div>
+                <div class="guided-controls">
+                  <textarea id="guided-request" class="text-area compact" placeholder="Ask SimApply to refine this resume..."></textarea>
+                  <button id="guided-submit" class="primary-button">Ask SimApply</button>
+                </div>
+                <p id="guided-error" class="error-message hidden"></p>
+                <div id="guided-result" class="guided-result hidden"></div>
+              </div>
+
+              <div class="review-grid">
+                <div class="panel-card">
+                  <div class="panel-head">
+                    <div>
+                      <p class="eyebrow small">Resume review</p>
+                      <h3>AI suggestions by resume line</h3>
+                    </div>
+                    <div class="legend">
+                      <span><i class="legend-dot good"></i>Strong</span>
+                      <span><i class="legend-dot warn"></i>Could improve</span>
+                      <span><i class="legend-dot fix"></i>Needs work</span>
+                    </div>
+                  </div>
+                  <div id="review-list" class="review-list"></div>
+                </div>
+
+                <aside class="panel-card side-column">
+                  <p class="eyebrow small">Missing keywords</p>
+                  <div id="keyword-list" class="keyword-list"></div>
+                </aside>
+              </div>
+            </section>
+
+            <section id="edit-tab" class="tab-panel">
+              <div class="panel-card">
+                <div class="panel-head">
+                  <div>
+                    <p class="eyebrow small">Edit</p>
+                    <h3>Refine the working draft</h3>
+                  </div>
+                </div>
+                <textarea id="edit-text" class="editor-textarea"></textarea>
+              </div>
+            </section>
+
+            <section id="preview-tab" class="tab-panel">
+              <div class="panel-card">
+                <div class="panel-head">
+                  <div>
+                    <p class="eyebrow small">Preview</p>
+                    <h3>Current working draft</h3>
+                  </div>
+                </div>
+                <div class="preview-paper">
+                  <pre id="preview-text" class="preview-text"></pre>
+                </div>
+              </div>
+            </section>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
