@@ -432,6 +432,14 @@ const server = http.createServer(async (request, response) => {
     return
   }
 
+  if (request.method === "GET" && request.url === "/health") {
+    sendJson(response, 200, {
+      ok: true,
+      service: "simapply-relay"
+    })
+    return
+  }
+
   if (
     request.method !== "POST" ||
     !["/analyze", "/rewrite-line", "/guided-request"].includes(request.url)
