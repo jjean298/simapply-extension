@@ -3,6 +3,9 @@ export interface ResumeReviewItem {
   type: "good" | "warn" | "fix"
   priority?: "high" | "medium" | "low"
   section?: string
+  missingKeyword?: string
+  bestFitSection?: string
+  whyItHelps?: string
   clarificationOptions?: string[]
   originalText: string
   suggestedText?: string
@@ -89,6 +92,18 @@ export function normalizeResumeInsights(value: unknown): ResumeInsights {
               section:
                 typeof item.section === "string" && item.section.trim()
                   ? item.section
+                  : undefined,
+              missingKeyword:
+                typeof item.missingKeyword === "string" && item.missingKeyword.trim()
+                  ? item.missingKeyword
+                  : undefined,
+              bestFitSection:
+                typeof item.bestFitSection === "string" && item.bestFitSection.trim()
+                  ? item.bestFitSection
+                  : undefined,
+              whyItHelps:
+                typeof item.whyItHelps === "string" && item.whyItHelps.trim()
+                  ? item.whyItHelps
                   : undefined,
               clarificationOptions: Array.isArray(item.clarificationOptions)
                 ? item.clarificationOptions.filter(
@@ -460,6 +475,103 @@ function buildKeywordHint(missingKeywords: string[]) {
   return ` Consider weaving in ${keywords[0]} or ${keywords[1]}.`
 }
 
+function formatSectionLabel(section: ResumeSectionKey | string | null | undefined) {
+  if (!section) return "this section"
+  switch (section) {
+    case "summary":
+      return "Summary"
+    case "experience":
+      return "Experience"
+    case "education":
+      return "Education"
+    case "skills":
+      return "Skills"
+    case "projects":
+      return "Projects"
+    default:
+      return typeof section === "string" && section.trim()
+        ? section
+        : "this section"
+  }
+}
+
+function pickMissingKeywordForLine(
+  line: string,
+  section: ResumeSectionKey,
+  missingKeywords: string[]
+) {
+  const normalizedLine = normalizeText(line)
+  const normalizedSection = formatSectionLabel(section).toLowerCase()
+  const remaining = missingKeywords.filter(
+    (keyword) => !normalizedLine.includes(keyword.toLowerCase())
+  )
+
+  const sectionMatches = remaining.filter((keyword) => {
+    const lowerKeyword = keyword.toLowerCase()
+
+    if (section === "skills") {
+      return /crm|saas|apis|sql|salesforce|zendesk|jira|windows|macos|ios/i.test(
+        lowerKeyword
+      )
+    }
+
+    if (section === "experience") {
+      return /support|customer|troubleshooting|documentation|communication|ticket|email|chat|crm|zendesk|salesforce|jira/i.test(
+        lowerKeyword
+      )
+    }
+
+    if (section === "summary") {
+      return /support|customer|communication|troubleshooting|documentation|collaboration/i.test(
+        lowerKeyword
+      )
+    }
+
+    if (section === "education" || section === "projects") {
+      return /apis|sql|saas|windows|macos|ios|documentation|project|technical/i.test(
+        lowerKeyword
+      )
+    }
+
+    return normalizedSection.includes(lowerKeyword)
+  })
+
+  return sectionMatches[0] || remaining[0]
+}
+
+function buildWhyItHelps(keyword: string | undefined, section: ResumeSectionKey) {
+  if (!keyword) return undefined
+
+  if (section === "skills") {
+    return `Adding ${keyword} makes the skills section easier for ATS scanners to match to the job description.`
+  }
+
+  if (section === "education" || section === "projects") {
+    return `If this is accurate, weaving in ${keyword} helps show role-relevant training or exposure.`
+  }
+
+  return `If this is accurate, adding ${keyword} helps this section match the role language more directly for ATS screening.`
+}
+
+function buildPlacementTip(section: ResumeSectionKey, keyword: string | undefined) {
+  const sectionLabel = formatSectionLabel(section)
+  if (!keyword) return sectionLabel
+
+  if (section === "experience") {
+    return `${sectionLabel} bullet`
+  }
+
+  if (section === "skills") {
+    return `${sectionLabel} list`
+  }
+
+  if (section === "summary") {
+    return `${sectionLabel} opener`
+  }
+
+  return sectionLabel
+}
+
 function buildImprovedBullet(
   bullet: string,
   missingKeywords: string[],
@@ -468,19 +580,28 @@ function buildImprovedBullet(
   const cleanBullet = stripFormatting(bullet).replace(/^[•\-]\s*/, "")
   const jobLower = normalizeText(jobPosting)
   const selectedKeywords = missingKeywords.slice(0, 2)
+  const primaryKeyword = selectedKeywords[0]
 
   if (
     jobLower.includes("support") ||
     jobLower.includes("technical") ||
     jobLower.includes("troubleshoot")
   ) {
+    if (primaryKeyword === "email support") {
+      return `Resolved customer issues through email support, written follow-up, and clear communication in fast-paced service environments.`
+    }
+
+    if (primaryKeyword === "zendesk" || primaryKeyword === "crm") {
+      return `Resolved customer issues through ticket workflows, written follow-up, and clear communication while supporting fast-paced service operations.`
+    }
+
     return `Resolved user issues across Windows, iOS, and web environments while maintaining clear communication and reliable follow-through.`
   }
 
   if (selectedKeywords.length > 0) {
-    return `Improved ${cleanBullet.toLowerCase()} by emphasizing ${selectedKeywords.join(
+    return `Strengthened this bullet with clearer ownership, stronger outcomes, and more direct alignment to ${selectedKeywords.join(
       " and "
-    )} with clearer ownership and impact.`
+    )}.`
   }
 
   return `Improved ${cleanBullet.toLowerCase()} by making the result, ownership, and collaboration more explicit.`
@@ -517,7 +638,7 @@ function buildImprovedLine(
   }
 
   if (section === "education") {
-    return `${cleanLine} - Highlight any coursework, tools, or training that directly supports this role.`
+    return `${cleanLine} - If accurate, highlight any coursework, tools, or training that directly supports this role.`
   }
 
   if (
@@ -561,6 +682,9 @@ function buildReviewItems(
       normalized.includes(keyword)
     )
     const section = getSectionFromLine(trimmed, currentSection)
+    const missingKeyword = pickMissingKeywordForLine(trimmed, section, missingKeywords)
+    const bestFitSection = buildPlacementTip(section, missingKeyword)
+    const whyItHelps = buildWhyItHelps(missingKeyword, section)
 
     if (isBullet) {
       const weakPattern = WEAK_BULLET_PATTERNS.some((pattern) =>
@@ -590,6 +714,9 @@ function buildReviewItems(
           id: `warn-${index}`,
           type: "warn",
           section,
+          missingKeyword,
+          bestFitSection,
+          whyItHelps,
           originalText: line,
           hoverTitle: "Could be sharper",
           reason:
@@ -603,6 +730,9 @@ function buildReviewItems(
           id: `fix-${index}`,
           type: "fix",
           section,
+          missingKeyword,
+          bestFitSection,
+          whyItHelps,
           originalText: line,
           suggestedText: `• ${buildImprovedBullet(trimmed, missingKeywords, jobPosting)}`,
           highlightText: weakWordSuggestion?.target,
@@ -635,10 +765,14 @@ function buildReviewItems(
         id: `warn-${index}`,
         type: "warn",
         section,
+        missingKeyword,
+        bestFitSection,
+        whyItHelps,
         originalText: line,
         hoverTitle: "Could be more tailored",
         reason:
-          `This line is useful, but it could connect more directly to the target role with clearer wording or stronger specificity.${buildKeywordHint(missingKeywords)}`
+          `This line is useful, but it could connect more directly to the target role with clearer wording or stronger specificity.${buildKeywordHint(missingKeywords)}`,
+        suggestedText: buildImprovedLine(trimmed, section, missingKeywords, jobPosting)
       })
     }
   })
@@ -725,6 +859,18 @@ export function ensureResumeReviewCoverage(
       ...item,
       section:
         item.section || getSectionFromResumeLine(item.originalText, resumeText),
+      missingKeyword:
+        item.missingKeyword ||
+        fallbackByLineKey.get(normalizeReviewKey(item.originalText))
+          ?.missingKeyword,
+      bestFitSection:
+        item.bestFitSection ||
+        fallbackByLineKey.get(normalizeReviewKey(item.originalText))
+          ?.bestFitSection,
+      whyItHelps:
+        item.whyItHelps ||
+        fallbackByLineKey.get(normalizeReviewKey(item.originalText))
+          ?.whyItHelps,
       suggestedText:
         item.type === "good"
           ? item.suggestedText

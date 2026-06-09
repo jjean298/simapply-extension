@@ -31,6 +31,30 @@ export function RewriteSuggestionControls({
 
   return (
     <div className="mt-3 space-y-3">
+      {reviewItem.missingKeyword || reviewItem.bestFitSection || reviewItem.whyItHelps ? (
+        <div className="rounded-xl border border-slate-200 bg-slate-50/90 px-3 py-3">
+          <div className="flex flex-wrap gap-x-4 gap-y-2 text-xs leading-5 text-slate-600">
+            {reviewItem.missingKeyword ? (
+              <p>
+                <span className="font-semibold text-slate-800">Missing keyword:</span>{" "}
+                {reviewItem.missingKeyword}
+              </p>
+            ) : null}
+            {reviewItem.bestFitSection ? (
+              <p>
+                <span className="font-semibold text-slate-800">Best place:</span>{" "}
+                {reviewItem.bestFitSection}
+              </p>
+            ) : null}
+          </div>
+          {reviewItem.whyItHelps ? (
+            <p className="mt-2 text-xs leading-5 text-slate-500">
+              {reviewItem.whyItHelps}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+
       {clarificationOptions.length > 0 ? (
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">

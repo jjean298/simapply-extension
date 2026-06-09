@@ -1038,6 +1038,30 @@ function renderReviewList() {
           ? `<p class="review-suggestion"><strong>Suggested fix:</strong> ${escapeHtml(item.suggestedText)}</p>`
           : ""
 
+      const atsHintBlock =
+        item.type !== "good" &&
+        (item.missingKeyword || item.bestFitSection || item.whyItHelps)
+          ? `
+            <div class="review-suggestion">
+              ${
+                item.missingKeyword
+                  ? `<p><strong>Missing keyword:</strong> ${escapeHtml(item.missingKeyword)}</p>`
+                  : ""
+              }
+              ${
+                item.bestFitSection
+                  ? `<p><strong>Best place:</strong> ${escapeHtml(item.bestFitSection)}</p>`
+                  : ""
+              }
+              ${
+                item.whyItHelps
+                  ? `<p class="muted-copy">${escapeHtml(item.whyItHelps)}</p>`
+                  : ""
+              }
+            </div>
+          `
+          : ""
+
       const actionButtons =
         item.type !== "good"
           ? `
@@ -1066,6 +1090,7 @@ function renderReviewList() {
           </div>
           <p class="review-line">${escapeHtml(item.originalText)}</p>
           <p class="review-reason">${escapeHtml(item.reason)}</p>
+          ${atsHintBlock}
           ${suggestionBlock}
           ${actionButtons}
         </article>

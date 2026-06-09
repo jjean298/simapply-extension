@@ -83,6 +83,18 @@ function validateInsightsShape(candidate) {
                     ? "medium"
                   : "medium",
             section: typeof item.section === "string" ? item.section : undefined,
+            missingKeyword:
+              typeof item.missingKeyword === "string"
+                ? item.missingKeyword
+                : undefined,
+            bestFitSection:
+              typeof item.bestFitSection === "string"
+                ? item.bestFitSection
+                : undefined,
+            whyItHelps:
+              typeof item.whyItHelps === "string"
+                ? item.whyItHelps
+                : undefined,
             clarificationOptions: Array.isArray(item.clarificationOptions)
               ? item.clarificationOptions
                   .filter((value) => typeof value === "string" && value.trim())
@@ -137,11 +149,15 @@ async function callOpenAI({ resumeText, jobPosting }) {
     "Only include review items for lines that are actually present in the resume lines list.",
     "Nearly every meaningful non-empty resume line should receive a review item unless it is purely decorative or redundant.",
     "For fix items, suggestedText should be a polished replacement for the full line.",
+    "For warn and fix items, include missingKeyword when the line is missing or underrepresenting an important ATS term from the job description.",
+    "For warn and fix items, include bestFitSection as a short placement hint like Experience bullet, Skills list, Summary opener, or Education section.",
+    "For warn and fix items, include whyItHelps as one short sentence explaining why adding the keyword helps ATS or role alignment.",
     "For fix items, clarificationOptions should be 3 to 8 short selectable details the user might confirm, like email support, phone support, live chat, ticketing, Zendesk, Salesforce, escalations, follow-up, documentation, or CRM.",
     "highlightText should be the exact weak word or phrase to highlight when useful.",
     "replacementText should be a stronger alternative for that weak word or phrase when useful.",
     "hoverTitle should be short and clear.",
     "missingKeywords should be short phrases from the job description that are absent or underrepresented.",
+    "When a warn or fix item includes a missingKeyword, suggestedText should show one natural way to strengthen the line so the keyword is better represented, without inventing false experience.",
     "agentPlan should be a short list of concrete next steps the user should take, in priority order.",
     "Keep reviewItems focused and practical. Prefer 14 to 28 items total.",
     "When a job description is provided, include multiple fix items unless the resume line is already clearly strong and directly aligned.",
@@ -161,6 +177,9 @@ async function callOpenAI({ resumeText, jobPosting }) {
         type: "good | warn | fix",
         priority: "high | medium | low",
         section: "string or omitted",
+        missingKeyword: "string or omitted",
+        bestFitSection: "string or omitted",
+        whyItHelps: "string or omitted",
         clarificationOptions: ["string"],
         originalText: "exact resume line",
         suggestedText: "string or omitted",

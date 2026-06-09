@@ -416,7 +416,7 @@ export function AIAssistantPanel({
                 Resume Review
               </h2>
               <p className="mt-1 text-sm text-slate-500">
-                Green highlights show what is working well. For red highlights, tap any missing details that apply and generate a better rewrite for that exact line.
+                Green highlights show what is working well. For yellow and red highlights, look for the missing keyword, where it belongs, and a stronger rewrite you can send into Edit.
               </p>
             </div>
             <div className="flex items-center gap-4 text-xs text-slate-500">
