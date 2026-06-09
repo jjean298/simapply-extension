@@ -725,21 +725,36 @@ input {
 
 .export-menu {
   position: relative;
+  margin-left: auto;
 }
 
 .download-button {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   min-height: 46px;
   border: 0;
   border-radius: 16px;
-  padding: 0 18px;
+  min-width: 214px;
+  gap: 14px;
+  padding: 0 14px 0 18px;
   font-weight: 600;
   color: white;
   background: linear-gradient(102deg, var(--warm), var(--rose), var(--accent));
   box-shadow: 0 14px 28px rgba(124, 92, 255, 0.24);
   cursor: pointer;
+}
+
+.download-caret {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  font-size: 0.9rem;
+  line-height: 1;
 }
 
 .download-menu {
@@ -883,7 +898,7 @@ input {
   display: flex;
   justify-content: space-between;
   gap: 16px;
-  align-items: flex-start;
+  align-items: center;
 }
 
 .error-message {
@@ -900,6 +915,14 @@ input {
   .workspace-header {
     grid-template-columns: 1fr;
     flex-direction: column;
+  }
+
+  .panel-head {
+    align-items: flex-start;
+  }
+
+  .export-menu {
+    margin-left: 0;
   }
 }
 
