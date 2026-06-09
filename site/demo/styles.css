@@ -745,7 +745,7 @@ input {
 
 .preview-split-line {
   display: grid;
-  align-items: baseline;
+  align-items: start;
   gap: 12px;
   margin: 0 0 1rem;
 }
