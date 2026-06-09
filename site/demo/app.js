@@ -264,6 +264,43 @@ function parseInlineSegments(text, inherited = {}) {
   const segments = []
   let remaining = text
 
+  function extractWrappedContent(source, prefix) {
+    if (!source.startsWith(prefix)) return null
+
+    let depth = 1
+    let cursor = prefix.length
+    let content = ""
+
+    while (cursor < source.length) {
+      const character = source[cursor]
+
+      if (character === "[") {
+        depth += 1
+        content += character
+        cursor += 1
+        continue
+      }
+
+      if (character === "]") {
+        depth -= 1
+        if (depth === 0) {
+          return {
+            inner: content,
+            full: source.slice(0, cursor + 1)
+          }
+        }
+        content += character
+        cursor += 1
+        continue
+      }
+
+      content += character
+      cursor += 1
+    }
+
+    return null
+  }
+
   function append(items) {
     items.forEach((item) => {
       if (!item.text) return
@@ -288,52 +325,76 @@ function parseInlineSegments(text, inherited = {}) {
   }
 
   while (remaining.length > 0) {
-    const indentMatch = remaining.match(/^\[INDENT:(.+?)\]/)
-    if (indentMatch) {
-      append(parseInlineSegments(indentMatch[1], { ...inherited, indent: true }))
-      remaining = remaining.slice(indentMatch[0].length)
+    const indentBlock = extractWrappedContent(remaining, "[INDENT:")
+    if (indentBlock) {
+      append(parseInlineSegments(indentBlock.inner, { ...inherited, indent: true }))
+      remaining = remaining.slice(indentBlock.full.length)
       continue
     }
 
-    const colorMatch = remaining.match(/^\[COLOR:([a-zA-Z0-9#-]+):(.+?)\]/)
-    if (colorMatch) {
-      append(parseInlineSegments(colorMatch[2], { ...inherited, color: colorMatch[1].trim() }))
-      remaining = remaining.slice(colorMatch[0].length)
+    const colorPrefixMatch = remaining.match(/^\[COLOR:([a-zA-Z0-9#-]+):/)
+    if (colorPrefixMatch) {
+      const colorBlock = extractWrappedContent(remaining, `[COLOR:${colorPrefixMatch[1]}:`)
+      if (colorBlock) {
+        append(
+          parseInlineSegments(colorBlock.inner, {
+            ...inherited,
+            color: colorPrefixMatch[1].trim()
+          })
+        )
+        remaining = remaining.slice(colorBlock.full.length)
+        continue
+      }
+    }
+
+    const fontPrefixMatch = remaining.match(/^\[FONT:([a-zA-Z0-9-]+):/)
+    if (fontPrefixMatch) {
+      const fontBlock = extractWrappedContent(remaining, `[FONT:${fontPrefixMatch[1]}:`)
+      if (fontBlock) {
+        append(
+          parseInlineSegments(fontBlock.inner, {
+            ...inherited,
+            fontFamily: fontPrefixMatch[1].trim()
+          })
+        )
+        remaining = remaining.slice(fontBlock.full.length)
+        continue
+      }
+    }
+
+    const sizePrefixMatch = remaining.match(/^\[SIZE:([0-9.]+):/)
+    if (sizePrefixMatch) {
+      const sizeBlock = extractWrappedContent(remaining, `[SIZE:${sizePrefixMatch[1]}:`)
+      if (sizeBlock) {
+        append(
+          parseInlineSegments(sizeBlock.inner, {
+            ...inherited,
+            fontSize: sizePrefixMatch[1].trim()
+          })
+        )
+        remaining = remaining.slice(sizeBlock.full.length)
+        continue
+      }
+    }
+
+    const leftBlock = extractWrappedContent(remaining, "[L:")
+    if (leftBlock) {
+      append(parseInlineSegments(leftBlock.inner, { ...inherited, align: "left" }))
+      remaining = remaining.slice(leftBlock.full.length)
       continue
     }
 
-    const fontMatch = remaining.match(/^\[FONT:([a-zA-Z0-9-]+):(.+?)\]/)
-    if (fontMatch) {
-      append(parseInlineSegments(fontMatch[2], { ...inherited, fontFamily: fontMatch[1].trim() }))
-      remaining = remaining.slice(fontMatch[0].length)
+    const centerBlock = extractWrappedContent(remaining, "[C:")
+    if (centerBlock) {
+      append(parseInlineSegments(centerBlock.inner, { ...inherited, align: "center" }))
+      remaining = remaining.slice(centerBlock.full.length)
       continue
     }
 
-    const sizeMatch = remaining.match(/^\[SIZE:([0-9.]+):(.+?)\]/)
-    if (sizeMatch) {
-      append(parseInlineSegments(sizeMatch[2], { ...inherited, fontSize: sizeMatch[1].trim() }))
-      remaining = remaining.slice(sizeMatch[0].length)
-      continue
-    }
-
-    const leftMatch = remaining.match(/^\[L:(.+?)\]/)
-    if (leftMatch) {
-      append(parseInlineSegments(leftMatch[1], { ...inherited, align: "left" }))
-      remaining = remaining.slice(leftMatch[0].length)
-      continue
-    }
-
-    const centerMatch = remaining.match(/^\[C:(.+?)\]/)
-    if (centerMatch) {
-      append(parseInlineSegments(centerMatch[1], { ...inherited, align: "center" }))
-      remaining = remaining.slice(centerMatch[0].length)
-      continue
-    }
-
-    const rightMatch = remaining.match(/^\[R:(.+?)\]/)
-    if (rightMatch) {
-      append(parseInlineSegments(rightMatch[1], { ...inherited, align: "right" }))
-      remaining = remaining.slice(rightMatch[0].length)
+    const rightBlock = extractWrappedContent(remaining, "[R:")
+    if (rightBlock) {
+      append(parseInlineSegments(rightBlock.inner, { ...inherited, align: "right" }))
+      remaining = remaining.slice(rightBlock.full.length)
       continue
     }
 
