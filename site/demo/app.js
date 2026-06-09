@@ -1,7 +1,7 @@
-import * as pdfjsLib from "https://cdn.jsdelivr.net/npm/pdfjs-dist@5.7.284/build/pdf.min.mjs"
+import * as pdfjsLib from "https://cdn.jsdelivr.net/npm/pdfjs-dist@5.7.284/legacy/build/pdf.min.mjs"
 
 pdfjsLib.GlobalWorkerOptions.workerSrc =
-  "https://cdn.jsdelivr.net/npm/pdfjs-dist@5.7.284/build/pdf.worker.min.mjs"
+  "https://cdn.jsdelivr.net/npm/pdfjs-dist@5.7.284/legacy/build/pdf.worker.min.mjs"
 
 const API_BASE_URL = "https://simapply-relay.onrender.com"
 
@@ -52,11 +52,11 @@ const elements = {
 
 function escapeHtml(value) {
   return value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;")
 }
 
 function renderInlineFormatting(text) {
@@ -347,7 +347,7 @@ function renderGuidedResult() {
       suggestedResumeText
         ? `<div class="guided-block">
             <p class="eyebrow small">Rewritten resume draft</p>
-            <p>${escapeHtml(suggestedResumeText).replaceAll("\n", "<br />")}</p>
+            <p>${escapeHtml(suggestedResumeText).replace(/\n/g, "<br />")}</p>
             <div class="review-actions">
               <button class="inline-button" id="apply-guided-draft">Replace Edit draft with this version</button>
             </div>
@@ -529,10 +529,14 @@ async function handleContinue() {
     elements.workspaceView.classList.remove("hidden")
     await runAnalysis()
   } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "We could not prepare the workspace."
+    const isPdfUploadIssue = state.inputMode === "upload"
+
     alert(
-      error instanceof Error
-        ? error.message
-        : "We could not prepare the workspace."
+      isPdfUploadIssue
+        ? `We couldn't extract that PDF in the browser demo. Try the Paste Resume tab instead, or use a different PDF file.\n\nTechnical detail: ${message}`
+        : message
     )
   } finally {
     elements.continueButton.textContent = "Continue to Workspace"
