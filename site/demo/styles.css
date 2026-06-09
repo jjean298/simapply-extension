@@ -739,6 +739,26 @@ input {
   margin-bottom: 0;
 }
 
+.preview-split-line {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: 12px;
+  margin: 0 0 1rem;
+}
+
+.preview-split-left {
+  text-align: left;
+}
+
+.preview-split-center {
+  text-align: center;
+}
+
+.preview-split-right {
+  text-align: right;
+}
+
 .preview-centered {
   text-align: center;
 }

@@ -379,42 +379,42 @@ function parseInlineSegments(text, inherited = {}) {
 
     const inlineLeftBlock = extractWrappedContent(remaining, "[IL:")
     if (inlineLeftBlock) {
-      append(parseInlineSegments(inlineLeftBlock.inner, { ...inherited, align: "inline-left" }))
+      append(parseInlineSegments(inlineLeftBlock.inner, { ...inherited, align: "left" }))
       remaining = remaining.slice(inlineLeftBlock.full.length)
       continue
     }
 
     const inlineCenterBlock = extractWrappedContent(remaining, "[IC:")
     if (inlineCenterBlock) {
-      append(parseInlineSegments(inlineCenterBlock.inner, { ...inherited, align: "inline-center" }))
+      append(parseInlineSegments(inlineCenterBlock.inner, { ...inherited, align: "center" }))
       remaining = remaining.slice(inlineCenterBlock.full.length)
       continue
     }
 
     const inlineRightBlock = extractWrappedContent(remaining, "[IR:")
     if (inlineRightBlock) {
-      append(parseInlineSegments(inlineRightBlock.inner, { ...inherited, align: "inline-right" }))
+      append(parseInlineSegments(inlineRightBlock.inner, { ...inherited, align: "right" }))
       remaining = remaining.slice(inlineRightBlock.full.length)
       continue
     }
 
     const leftBlock = extractWrappedContent(remaining, "[L:")
     if (leftBlock) {
-      append(parseInlineSegments(leftBlock.inner, { ...inherited, align: "block-left" }))
+      append(parseInlineSegments(leftBlock.inner, { ...inherited, align: "left" }))
       remaining = remaining.slice(leftBlock.full.length)
       continue
     }
 
     const centerBlock = extractWrappedContent(remaining, "[C:")
     if (centerBlock) {
-      append(parseInlineSegments(centerBlock.inner, { ...inherited, align: "block-center" }))
+      append(parseInlineSegments(centerBlock.inner, { ...inherited, align: "center" }))
       remaining = remaining.slice(centerBlock.full.length)
       continue
     }
 
     const rightBlock = extractWrappedContent(remaining, "[R:")
     if (rightBlock) {
-      append(parseInlineSegments(rightBlock.inner, { ...inherited, align: "block-right" }))
+      append(parseInlineSegments(rightBlock.inner, { ...inherited, align: "right" }))
       remaining = remaining.slice(rightBlock.full.length)
       continue
     }
@@ -512,20 +512,6 @@ function renderSegments(segments) {
       if (segment.indent) {
         styles.push("padding-left:2rem;display:inline-block")
       }
-      if (segment.align === "block-center") {
-        styles.push("display:block;text-align:center")
-      } else if (segment.align === "block-right") {
-        styles.push("display:block;text-align:right")
-      } else if (segment.align === "block-left") {
-        styles.push("display:block;text-align:left")
-      } else if (segment.align === "inline-center") {
-        styles.push("display:inline-flex;min-width:14rem;justify-content:center;text-align:center")
-      } else if (segment.align === "inline-right") {
-        styles.push("display:inline-flex;min-width:14rem;justify-content:flex-end;text-align:right")
-      } else if (segment.align === "inline-left") {
-        styles.push("display:inline-flex;min-width:14rem;justify-content:flex-start;text-align:left")
-      }
-
       const styleAttr = styles.length ? ` style="${styles.join(";")}"` : ""
       let content = escapeHtml(segment.text)
 
@@ -565,17 +551,20 @@ function renderPreview() {
       ? cleanedLine.replace(/^([•●⬤▸★✓■◆-])\s*/, "")
       : cleanedLine
     const segments = parseInlineSegments(lineContent)
-    const segmentAlignment =
-      segments.find((segment) => String(segment.align || "").startsWith("block-"))?.align?.replace("block-", "") || alignment
+    const leftSegments = segments.filter((segment) => !segment.align || segment.align === "left")
+    const centerSegments = segments.filter((segment) => segment.align === "center")
+    const rightSegments = segments.filter((segment) => segment.align === "right")
+    const hasGroupedAlignment = centerSegments.length > 0 || rightSegments.length > 0
+
     const rendered = renderSegments(segments)
 
     const styleAttr = spacing ? ` style="line-height:${spacing}"` : ""
     const className =
-      segmentAlignment === "center"
+      alignment === "center"
         ? "preview-centered"
-        : segmentAlignment === "right"
+        : alignment === "right"
           ? "preview-right"
-          : segmentAlignment === "justify"
+          : alignment === "justify"
             ? "preview-justify"
             : "preview-left"
 
@@ -585,6 +574,18 @@ function renderPreview() {
     }
 
     flushList()
+
+    if (hasGroupedAlignment) {
+      parts.push(`
+        <div class="preview-split-line"${styleAttr}>
+          <span class="preview-split-left">${renderSegments(leftSegments)}</span>
+          <span class="preview-split-center">${renderSegments(centerSegments)}</span>
+          <span class="preview-split-right">${renderSegments(rightSegments)}</span>
+        </div>
+      `)
+      return
+    }
+
     parts.push(`<p class="${className}"${styleAttr}>${rendered}</p>`)
   })
 
@@ -730,29 +731,17 @@ function applyToolbarAction(format, value = "") {
   }
 
   if (format === "left") {
-    if (selectionCoversWholeLines()) {
-      applyLineWrapper("[L:")
-    } else {
-      applySelectionWrapper("[IL:")
-    }
+    applySelectionWrapper("[L:")
     return
   }
 
   if (format === "center") {
-    if (selectionCoversWholeLines()) {
-      applyLineWrapper("[C:")
-    } else {
-      applySelectionWrapper("[IC:")
-    }
+    applySelectionWrapper("[C:")
     return
   }
 
   if (format === "right") {
-    if (selectionCoversWholeLines()) {
-      applyLineWrapper("[R:")
-    } else {
-      applySelectionWrapper("[IR:")
-    }
+    applySelectionWrapper("[R:")
     return
   }
 
