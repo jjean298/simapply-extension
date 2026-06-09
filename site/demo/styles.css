@@ -723,6 +723,55 @@ input {
   transition: padding 160ms ease;
 }
 
+.export-menu {
+  position: relative;
+}
+
+.download-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  border: 0;
+  border-radius: 16px;
+  padding: 0 18px;
+  font-weight: 600;
+  color: white;
+  background: linear-gradient(102deg, var(--warm), var(--rose), var(--accent));
+  box-shadow: 0 14px 28px rgba(124, 92, 255, 0.24);
+  cursor: pointer;
+}
+
+.download-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 10px);
+  min-width: 180px;
+  padding: 10px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(17, 24, 39, 0.96);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 24px 44px rgba(0, 0, 0, 0.34);
+  display: grid;
+  gap: 8px;
+  z-index: 20;
+}
+
+.download-option {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 10px 12px;
+  color: #f8fafc;
+  background: rgba(255, 255, 255, 0.04);
+  text-align: left;
+  cursor: pointer;
+}
+
+.download-option:hover {
+  background: rgba(255, 255, 255, 0.09);
+}
+
 .preview-text {
   margin: 0;
   color: #0f1728;

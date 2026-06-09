@@ -65,6 +65,9 @@ const elements = {
   marginSelect: document.getElementById("margin-select"),
   spacingSelect: document.getElementById("spacing-select"),
   bulletSelect: document.getElementById("bullet-select"),
+  downloadToggle: document.getElementById("download-toggle"),
+  downloadMenu: document.getElementById("download-menu"),
+  downloadOptions: Array.from(document.querySelectorAll(".download-option")),
   tabPanels: {
     assistant: document.getElementById("assistant-tab"),
     edit: document.getElementById("edit-tab"),
@@ -134,6 +137,14 @@ function updateContinueButton() {
       : Boolean(elements.resumeText.value.trim())
 
   elements.continueButton.disabled = !canContinue
+}
+
+function toggleDownloadMenu(forceOpen) {
+  const nextOpen =
+    typeof forceOpen === "boolean"
+      ? forceOpen
+      : elements.downloadMenu.classList.contains("hidden")
+  elements.downloadMenu.classList.toggle("hidden", !nextOpen)
 }
 
 function recordHistory(value) {
@@ -241,6 +252,134 @@ async function fetchJson(path, payload) {
   }
 
   return data
+}
+
+async function downloadPdf() {
+  renderPreview()
+  const { jsPDF } = await import("https://cdn.jsdelivr.net/npm/jspdf@2.5.1/+esm")
+  const doc = new jsPDF({
+    orientation: "portrait",
+    unit: "pt",
+    format: "letter"
+  })
+
+  await new Promise((resolve) => {
+    doc.html(elements.previewPaper, {
+      x: 18,
+      y: 18,
+      width: 576,
+      windowWidth: elements.previewPaper.scrollWidth || 860,
+      autoPaging: "text",
+      html2canvas: {
+        scale: 0.6
+      },
+      callback: () => resolve()
+    })
+  })
+
+  doc.save("simapply-resume.pdf")
+}
+
+function downloadWord() {
+  renderPreview()
+  const documentHtml = `<!doctype html>
+  <html>
+    <head>
+      <meta charset="utf-8" />
+      <title>SimApply Resume Export</title>
+      <style>
+        body {
+          margin: 0;
+          padding: 24px;
+          font-family: "Avenir Next", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+          color: #0f1728;
+          background: white;
+        }
+        .paper {
+          max-width: 860px;
+          margin: 0 auto;
+          background: white;
+          border-radius: 0;
+          padding: ${elements.previewPaper.style.padding || "48px 48px 40px"};
+        }
+        .preview-text {
+          line-height: 1.75;
+        }
+        .preview-text p {
+          margin: 0 0 1rem;
+        }
+        .preview-text ul {
+          margin: 0 0 1rem 1.3rem;
+          padding: 0;
+        }
+        .preview-split-two {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          gap: 12px;
+          margin: 0 0 1rem;
+        }
+        .preview-split-three {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+          gap: 12px;
+          margin: 0 0 1rem;
+        }
+        .preview-split-left {
+          min-width: 0;
+          flex: 1 1 auto;
+          text-align: left;
+        }
+        .preview-split-center {
+          text-align: center;
+        }
+        .preview-split-right {
+          flex: 0 0 auto;
+          padding-left: 16px;
+          text-align: right;
+        }
+        .preview-centered {
+          text-align: center;
+        }
+        .preview-right {
+          text-align: right;
+        }
+        .preview-justify {
+          text-align: justify;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="paper">
+        <div class="preview-text">${elements.previewText.innerHTML}</div>
+      </div>
+    </body>
+  </html>`
+
+  const blob = new Blob([documentHtml], {
+    type: "application/msword"
+  })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement("a")
+  link.href = url
+  link.download = "simapply-resume.doc"
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  URL.revokeObjectURL(url)
+}
+
+async function handleDownload(type) {
+  toggleDownloadMenu(false)
+
+  if (type === "pdf") {
+    await downloadPdf()
+    return
+  }
+
+  if (type === "word") {
+    downloadWord()
+  }
 }
 
 function applySuggestion(item, nextText) {
@@ -1164,6 +1303,24 @@ elements.bulletSelect.addEventListener("change", () => {
   if (!elements.bulletSelect.value) return
   applyToolbarAction("bullet", elements.bulletSelect.value)
   elements.bulletSelect.value = ""
+})
+
+elements.downloadToggle.addEventListener("click", () => {
+  toggleDownloadMenu()
+})
+
+elements.downloadOptions.forEach((button) => {
+  button.addEventListener("click", async () => {
+    const type = button.dataset.download
+    if (!type) return
+    await handleDownload(type)
+  })
+})
+
+document.addEventListener("mousedown", (event) => {
+  if (!elements.downloadMenu.contains(event.target) && !elements.downloadToggle.contains(event.target)) {
+    toggleDownloadMenu(false)
+  }
 })
 
 elements.guidedSubmit.addEventListener("click", handleGuidedRequest)
