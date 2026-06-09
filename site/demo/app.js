@@ -576,17 +576,22 @@ function renderPreview() {
     flushList()
 
     if (hasGroupedAlignment) {
-      const splitClass =
-        centerSegments.length > 0
-          ? "preview-split-line preview-split-three"
-          : "preview-split-line preview-split-two"
-      parts.push(`
-        <div class="${splitClass}"${styleAttr}>
-          <span class="preview-split-left">${renderSegments(leftSegments)}</span>
-          <span class="preview-split-center">${renderSegments(centerSegments)}</span>
-          <span class="preview-split-right">${renderSegments(rightSegments)}</span>
-        </div>
-      `)
+      if (centerSegments.length === 0) {
+        parts.push(`
+          <div class="preview-split-line preview-split-two"${styleAttr}>
+            <span class="preview-split-left">${renderSegments(leftSegments)}</span>
+            <span class="preview-split-right">${renderSegments(rightSegments)}</span>
+          </div>
+        `)
+      } else {
+        parts.push(`
+          <div class="preview-split-line preview-split-three"${styleAttr}>
+            <span class="preview-split-left">${renderSegments(leftSegments)}</span>
+            <span class="preview-split-center">${renderSegments(centerSegments)}</span>
+            <span class="preview-split-right">${renderSegments(rightSegments)}</span>
+          </div>
+        `)
+      }
       return
     }
 

@@ -751,7 +751,9 @@ input {
 }
 
 .preview-split-two {
-  grid-template-columns: minmax(0, 1fr) auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
 }
 
 .preview-split-three {
@@ -759,6 +761,8 @@ input {
 }
 
 .preview-split-left {
+  min-width: 0;
+  flex: 1 1 auto;
   text-align: left;
 }
 
@@ -767,6 +771,8 @@ input {
 }
 
 .preview-split-right {
+  flex: 0 0 auto;
+  padding-left: 16px;
   text-align: right;
 }
 
