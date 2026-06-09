@@ -116,8 +116,24 @@ PORT=8787
 
 ## Roadmap
 
-- Improve PDF review density and line-to-line highlight accuracy
-- Add AI usage limits and bring-your-own-key flow
-- Deploy the relay server for non-local use
-- Improve document fidelity for edited preview/export
-- Add a public-facing landing page
+### Shipped
+
+- Chrome extension MVP with a tabbed `AI Assistant / Edit / Preview` workspace
+- Hosted OpenAI relay for real resume analysis and guided rewrites
+- Original resume review with highlight overlays on uploaded content
+- Editing controls for margins, spacing, fonts, links, and alignment
+- Public landing page plus a hosted browser demo for live showcasing
+
+### In Progress
+
+- Improve PDF import reliability across browsers
+- Increase highlight accuracy and review density on original resume files
+- Strengthen ATS-specific rewrite quality and missing-keyword insertion help
+- Improve formatting fidelity between edited drafts, preview, and export
+
+### Next
+
+- Add AI usage limits and a bring-your-own-key flow
+- Add richer DOCX parsing and import support
+- Package and publish the extension to the Chrome Web Store
+- Add post-MVP analytics, feedback collection, and broader usability testing
