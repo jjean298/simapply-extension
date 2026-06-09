@@ -491,6 +491,13 @@ function renderSegments(segments) {
       if (segment.indent) {
         styles.push("padding-left:2rem;display:inline-block")
       }
+      if (segment.align === "center") {
+        styles.push("display:block;text-align:center")
+      } else if (segment.align === "right") {
+        styles.push("display:block;text-align:right")
+      } else if (segment.align === "left") {
+        styles.push("display:block;text-align:left")
+      }
 
       const styleAttr = styles.length ? ` style="${styles.join(";")}"` : ""
       let content = escapeHtml(segment.text)
@@ -587,6 +594,17 @@ function applyLinePrefix(prefix) {
   setEditedText(textarea.value, { preserveSelection: true })
 }
 
+function applySelectionWrapper(prefix, suffix = "]") {
+  const textarea = elements.editText
+  const start = textarea.selectionStart
+  const end = textarea.selectionEnd
+  if (start === end) return
+
+  const selected = textarea.value.slice(start, end)
+  textarea.setRangeText(`${prefix}${selected}${suffix}`, start, end, "select")
+  setEditedText(textarea.value, { preserveSelection: true })
+}
+
 function applyLineWrapper(prefix, suffix = "]") {
   const textarea = elements.editText
   const start = textarea.selectionStart
@@ -671,17 +689,17 @@ function applyToolbarAction(format, value = "") {
   }
 
   if (format === "left") {
-    applyLineWrapper("[L:")
+    applySelectionWrapper("[L:")
     return
   }
 
   if (format === "center") {
-    applyLineWrapper("[C:")
+    applySelectionWrapper("[C:")
     return
   }
 
   if (format === "right") {
-    applyLineWrapper("[R:")
+    applySelectionWrapper("[R:")
     return
   }
 
@@ -691,7 +709,7 @@ function applyToolbarAction(format, value = "") {
   }
 
   if (format === "indent") {
-    applyLineWrapper("[INDENT:")
+    applySelectionWrapper("[INDENT:")
     return
   }
 
