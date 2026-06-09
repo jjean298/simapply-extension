@@ -519,11 +519,11 @@ function renderSegments(segments) {
       } else if (segment.align === "block-left") {
         styles.push("display:block;text-align:left")
       } else if (segment.align === "inline-center") {
-        styles.push("display:inline-block;text-align:center")
+        styles.push("display:inline-flex;min-width:14rem;justify-content:center;text-align:center")
       } else if (segment.align === "inline-right") {
-        styles.push("display:inline-block;text-align:right")
+        styles.push("display:inline-flex;min-width:14rem;justify-content:flex-end;text-align:right")
       } else if (segment.align === "inline-left") {
-        styles.push("display:inline-block;text-align:left")
+        styles.push("display:inline-flex;min-width:14rem;justify-content:flex-start;text-align:left")
       }
 
       const styleAttr = styles.length ? ` style="${styles.join(";")}"` : ""
