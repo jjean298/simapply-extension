@@ -207,6 +207,17 @@ input {
   margin-bottom: 18px;
 }
 
+.upload-disclaimer {
+  margin: -2px 0 18px;
+  color: #aab7cf;
+  line-height: 1.65;
+  font-size: 0.93rem;
+}
+
+.upload-disclaimer strong {
+  color: #f8fafc;
+}
+
 .mode-button,
 .tab-button,
 .preset-pill,
@@ -410,6 +421,51 @@ input {
   color: #f8fafc;
   background: rgba(255, 255, 255, 0.05);
   outline: none;
+}
+
+.toolbar-color-swatches {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.toolbar-color-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 999px;
+  padding: 6px 10px;
+  color: #c8d2e4;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 0.77rem;
+}
+
+.toolbar-color-chip i {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  display: inline-block;
+}
+
+.toolbar-color-chip .black {
+  background: #0f1728;
+}
+
+.toolbar-color-chip .slate {
+  background: #475569;
+}
+
+.toolbar-color-chip .blue {
+  background: #2563eb;
+}
+
+.toolbar-color-chip .green {
+  background: #15803d;
+}
+
+.toolbar-color-chip .red {
+  background: #dc2626;
 }
 
 .toolbar-helper {

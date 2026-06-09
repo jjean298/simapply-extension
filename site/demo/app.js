@@ -21,8 +21,12 @@ const COLOR_MAP = {
 }
 
 const FONT_MAP = {
-  serif: '"Georgia", "Times New Roman", serif',
-  sans: '"Avenir Next", "Segoe UI", "Helvetica Neue", Arial, sans-serif',
+  "times-new-roman": '"Times New Roman", Times, serif',
+  aptos: '"Aptos", "Segoe UI", Calibri, sans-serif',
+  georgia: '"Georgia", "Times New Roman", serif',
+  arial: "Arial, sans-serif",
+  helvetica: '"Helvetica Neue", Helvetica, Arial, sans-serif',
+  avenir: '"Avenir Next", "Segoe UI", "Helvetica Neue", Arial, sans-serif',
   mono: '"SFMono-Regular", "Menlo", "Monaco", monospace'
 }
 
@@ -298,7 +302,7 @@ function parseInlineSegments(text, inherited = {}) {
       continue
     }
 
-    const fontMatch = remaining.match(/^\[FONT:(serif|sans|mono):(.+?)\]/)
+    const fontMatch = remaining.match(/^\[FONT:([a-zA-Z0-9-]+):(.+?)\]/)
     if (fontMatch) {
       append(parseInlineSegments(fontMatch[2], { ...inherited, fontFamily: fontMatch[1].trim() }))
       remaining = remaining.slice(fontMatch[0].length)
@@ -418,7 +422,7 @@ function renderSegments(segments) {
         styles.push(`color:${COLOR_MAP[segment.color] || segment.color}`)
       }
       if (segment.fontFamily) {
-        styles.push(`font-family:${FONT_MAP[segment.fontFamily] || FONT_MAP.sans}`)
+        styles.push(`font-family:${FONT_MAP[segment.fontFamily] || FONT_MAP.avenir}`)
       }
       if (segment.fontSize) {
         styles.push(`font-size:${segment.fontSize}pt`)

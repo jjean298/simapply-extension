@@ -75,6 +75,11 @@
               <button class="mode-button" data-mode="paste">Paste Resume</button>
             </div>
 
+            <p class="upload-disclaimer">
+              For the smoothest demo right now, we recommend <strong>Paste Resume</strong>.
+              PDF importing is on the roadmap, and you can use the Edit tab to refine formatting afterward.
+            </p>
+
             <div id="upload-panel" class="panel-card">
               <label class="field-label">Resume</label>
               <label class="upload-dropzone" for="resume-file">
@@ -214,8 +219,12 @@
                     <span>Font</span>
                     <select id="font-select" class="toolbar-select">
                       <option value="">Font</option>
-                      <option value="serif">Serif</option>
-                      <option value="sans">Sans</option>
+                      <option value="times-new-roman">Times New Roman</option>
+                      <option value="aptos">Aptos</option>
+                      <option value="georgia">Georgia</option>
+                      <option value="arial">Arial</option>
+                      <option value="helvetica">Helvetica Neue</option>
+                      <option value="avenir">Avenir Next</option>
                       <option value="mono">Mono</option>
                     </select>
                   </label>
@@ -223,23 +232,30 @@
                     <span>Size</span>
                     <select id="size-select" class="toolbar-select">
                       <option value="">Size</option>
-                      <option value="9.5">Small</option>
-                      <option value="10.5">Normal</option>
-                      <option value="12">Medium</option>
-                      <option value="14">Large</option>
-                      <option value="16">XL</option>
+                      <option value="9.5">9.5 pt</option>
+                      <option value="10.5">10.5 pt</option>
+                      <option value="12">12 pt</option>
+                      <option value="14">14 pt</option>
+                      <option value="16">16 pt</option>
                     </select>
                   </label>
                   <label class="toolbar-select-label">
                     <span>Color</span>
                     <select id="color-select" class="toolbar-select">
                       <option value="">Color</option>
-                      <option value="black">Black</option>
-                      <option value="slate">Slate</option>
-                      <option value="blue">Blue</option>
-                      <option value="green">Green</option>
-                      <option value="red">Red</option>
+                      <option value="black">● Black</option>
+                      <option value="slate">● Slate</option>
+                      <option value="blue">● Blue</option>
+                      <option value="green">● Green</option>
+                      <option value="red">● Red</option>
                     </select>
+                    <span class="toolbar-color-swatches" aria-hidden="true">
+                      <span class="toolbar-color-chip"><i class="black"></i>Black</span>
+                      <span class="toolbar-color-chip"><i class="slate"></i>Slate</span>
+                      <span class="toolbar-color-chip"><i class="blue"></i>Blue</span>
+                      <span class="toolbar-color-chip"><i class="green"></i>Green</span>
+                      <span class="toolbar-color-chip"><i class="red"></i>Red</span>
+                    </span>
                   </label>
                   <label class="toolbar-select-label">
                     <span>Margins</span>
