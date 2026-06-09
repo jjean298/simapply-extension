@@ -377,23 +377,44 @@ function parseInlineSegments(text, inherited = {}) {
       }
     }
 
+    const inlineLeftBlock = extractWrappedContent(remaining, "[IL:")
+    if (inlineLeftBlock) {
+      append(parseInlineSegments(inlineLeftBlock.inner, { ...inherited, align: "inline-left" }))
+      remaining = remaining.slice(inlineLeftBlock.full.length)
+      continue
+    }
+
+    const inlineCenterBlock = extractWrappedContent(remaining, "[IC:")
+    if (inlineCenterBlock) {
+      append(parseInlineSegments(inlineCenterBlock.inner, { ...inherited, align: "inline-center" }))
+      remaining = remaining.slice(inlineCenterBlock.full.length)
+      continue
+    }
+
+    const inlineRightBlock = extractWrappedContent(remaining, "[IR:")
+    if (inlineRightBlock) {
+      append(parseInlineSegments(inlineRightBlock.inner, { ...inherited, align: "inline-right" }))
+      remaining = remaining.slice(inlineRightBlock.full.length)
+      continue
+    }
+
     const leftBlock = extractWrappedContent(remaining, "[L:")
     if (leftBlock) {
-      append(parseInlineSegments(leftBlock.inner, { ...inherited, align: "left" }))
+      append(parseInlineSegments(leftBlock.inner, { ...inherited, align: "block-left" }))
       remaining = remaining.slice(leftBlock.full.length)
       continue
     }
 
     const centerBlock = extractWrappedContent(remaining, "[C:")
     if (centerBlock) {
-      append(parseInlineSegments(centerBlock.inner, { ...inherited, align: "center" }))
+      append(parseInlineSegments(centerBlock.inner, { ...inherited, align: "block-center" }))
       remaining = remaining.slice(centerBlock.full.length)
       continue
     }
 
     const rightBlock = extractWrappedContent(remaining, "[R:")
     if (rightBlock) {
-      append(parseInlineSegments(rightBlock.inner, { ...inherited, align: "right" }))
+      append(parseInlineSegments(rightBlock.inner, { ...inherited, align: "block-right" }))
       remaining = remaining.slice(rightBlock.full.length)
       continue
     }
@@ -491,12 +512,18 @@ function renderSegments(segments) {
       if (segment.indent) {
         styles.push("padding-left:2rem;display:inline-block")
       }
-      if (segment.align === "center") {
+      if (segment.align === "block-center") {
         styles.push("display:block;text-align:center")
-      } else if (segment.align === "right") {
+      } else if (segment.align === "block-right") {
         styles.push("display:block;text-align:right")
-      } else if (segment.align === "left") {
+      } else if (segment.align === "block-left") {
         styles.push("display:block;text-align:left")
+      } else if (segment.align === "inline-center") {
+        styles.push("display:inline-block;text-align:center")
+      } else if (segment.align === "inline-right") {
+        styles.push("display:inline-block;text-align:right")
+      } else if (segment.align === "inline-left") {
+        styles.push("display:inline-block;text-align:left")
       }
 
       const styleAttr = styles.length ? ` style="${styles.join(";")}"` : ""
@@ -539,7 +566,7 @@ function renderPreview() {
       : cleanedLine
     const segments = parseInlineSegments(lineContent)
     const segmentAlignment =
-      segments.find((segment) => segment.align)?.align || alignment
+      segments.find((segment) => String(segment.align || "").startsWith("block-"))?.align?.replace("block-", "") || alignment
     const rendered = renderSegments(segments)
 
     const styleAttr = spacing ? ` style="line-height:${spacing}"` : ""
@@ -626,6 +653,20 @@ function applyLineWrapper(prefix, suffix = "]") {
   setEditedText(textarea.value, { preserveSelection: true })
 }
 
+function selectionCoversWholeLines() {
+  const textarea = elements.editText
+  const start = textarea.selectionStart
+  const end = textarea.selectionEnd
+  if (start === end) return false
+
+  const value = textarea.value
+  const lineStart = value.lastIndexOf("\n", start - 1) + 1
+  const lineEndIndex = value.indexOf("\n", end)
+  const lineEnd = lineEndIndex === -1 ? value.length : lineEndIndex
+
+  return start === lineStart && end === lineEnd
+}
+
 function applyStyleSelection(tag, value) {
   const textarea = elements.editText
   const start = textarea.selectionStart
@@ -689,17 +730,29 @@ function applyToolbarAction(format, value = "") {
   }
 
   if (format === "left") {
-    applySelectionWrapper("[L:")
+    if (selectionCoversWholeLines()) {
+      applyLineWrapper("[L:")
+    } else {
+      applySelectionWrapper("[IL:")
+    }
     return
   }
 
   if (format === "center") {
-    applySelectionWrapper("[C:")
+    if (selectionCoversWholeLines()) {
+      applyLineWrapper("[C:")
+    } else {
+      applySelectionWrapper("[IC:")
+    }
     return
   }
 
   if (format === "right") {
-    applySelectionWrapper("[R:")
+    if (selectionCoversWholeLines()) {
+      applyLineWrapper("[R:")
+    } else {
+      applySelectionWrapper("[IR:")
+    }
     return
   }
 
