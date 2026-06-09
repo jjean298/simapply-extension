@@ -15,12 +15,25 @@ This project is currently an MVP / prototype. Formatting may shift during editin
 
 ## Tech Stack
 
-- Plasmo
-- React
-- Tailwind CSS
+- `TypeScript`
+- `React 19`
+- `Plasmo`
+- `Tailwind CSS`
+- `PostCSS`
+- `Autoprefixer`
+- `Node.js`
+- Native Node `http` server for the AI relay
+- `OpenAI Responses API`
+- `gpt-4o-mini`
 - `pdfjs-dist`
-- `jspdf`
-- OpenAI Responses API through a local relay server
+- `jsPDF`
+- `pdf-lib`
+- `mammoth`
+- `lucide-react`
+- Chrome Extension APIs
+- `@types/chrome`
+- Cloudflare Pages for the landing page and hosted browser demo
+- Render for the hosted AI backend
 
 ## Local Setup
 
