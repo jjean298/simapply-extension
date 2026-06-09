@@ -198,14 +198,88 @@
                   </div>
                 </div>
                 <div class="editor-toolbar">
+                  <button class="toolbar-button" data-format="undo">Undo</button>
+                  <button class="toolbar-button" data-format="redo">Redo</button>
+                  <span class="toolbar-separator" aria-hidden="true"></span>
                   <button class="toolbar-button" data-format="bold">Bold</button>
                   <button class="toolbar-button" data-format="italic">Italic</button>
                   <button class="toolbar-button" data-format="underline">Underline</button>
-                  <button class="toolbar-button" data-format="bullet">Bullet</button>
-                  <button class="toolbar-button" data-format="center">Center</button>
                   <button class="toolbar-button" data-format="link">Link</button>
+                  <button class="toolbar-button" data-format="left">Left</button>
+                  <button class="toolbar-button" data-format="center">Center</button>
+                  <button class="toolbar-button" data-format="right">Right</button>
+                  <button class="toolbar-button" data-format="justify">Justify</button>
+                  <button class="toolbar-button" data-format="indent">Indent</button>
+                  <label class="toolbar-select-label">
+                    <span>Font</span>
+                    <select id="font-select" class="toolbar-select">
+                      <option value="">Font</option>
+                      <option value="serif">Serif</option>
+                      <option value="sans">Sans</option>
+                      <option value="mono">Mono</option>
+                    </select>
+                  </label>
+                  <label class="toolbar-select-label">
+                    <span>Size</span>
+                    <select id="size-select" class="toolbar-select">
+                      <option value="">Size</option>
+                      <option value="9.5">Small</option>
+                      <option value="10.5">Normal</option>
+                      <option value="12">Medium</option>
+                      <option value="14">Large</option>
+                      <option value="16">XL</option>
+                    </select>
+                  </label>
+                  <label class="toolbar-select-label">
+                    <span>Color</span>
+                    <select id="color-select" class="toolbar-select">
+                      <option value="">Color</option>
+                      <option value="black">Black</option>
+                      <option value="slate">Slate</option>
+                      <option value="blue">Blue</option>
+                      <option value="green">Green</option>
+                      <option value="red">Red</option>
+                    </select>
+                  </label>
+                  <label class="toolbar-select-label">
+                    <span>Margins</span>
+                    <select id="margin-select" class="toolbar-select">
+                      <option value="normal">Normal</option>
+                      <option value="narrow">Narrow</option>
+                      <option value="moderate">Moderate</option>
+                      <option value="wide">Wide</option>
+                    </select>
+                  </label>
+                  <label class="toolbar-select-label">
+                    <span>Spacing</span>
+                    <select id="spacing-select" class="toolbar-select">
+                      <option value="">Spacing</option>
+                      <option value="0.5">0.5x</option>
+                      <option value="1.0">1x</option>
+                      <option value="1.5">1.5x</option>
+                      <option value="2.0">2x</option>
+                    </select>
+                  </label>
+                  <label class="toolbar-select-label">
+                    <span>Bullets</span>
+                    <select id="bullet-select" class="toolbar-select">
+                      <option value="">Bullets</option>
+                      <option value="•">• Dot</option>
+                      <option value="●">● Medium Dot</option>
+                      <option value="⬤">⬤ Large Dot</option>
+                      <option value="▸">▸ Arrow</option>
+                      <option value="★">★ Star</option>
+                      <option value="✓">✓ Check</option>
+                      <option value="■">■ Square</option>
+                      <option value="◆">◆ Diamond</option>
+                      <option value="-">- Dash</option>
+                    </select>
+                  </label>
                 </div>
-                <textarea id="edit-text" class="editor-textarea"></textarea>
+                <p class="toolbar-helper">Use the controls to shape the working draft, then switch to Preview to review the formatted version.</p>
+                <div id="editor-canvas" class="editor-canvas" data-margin="normal">
+                  <textarea id="edit-text" class="editor-textarea"></textarea>
+                </div>
               </div>
             </section>
 
@@ -217,7 +291,7 @@
                     <h3>Current working draft</h3>
                   </div>
                 </div>
-                <div class="preview-paper">
+                <div id="preview-paper" class="preview-paper" data-margin="normal">
                   <div id="preview-text" class="preview-text"></div>
                 </div>
               </div>

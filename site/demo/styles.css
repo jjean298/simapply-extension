@@ -384,6 +384,48 @@ input {
   background: rgba(255, 255, 255, 0.1);
 }
 
+.toolbar-separator {
+  width: 1px;
+  height: 38px;
+  background: rgba(255, 255, 255, 0.12);
+  align-self: center;
+}
+
+.toolbar-select-label {
+  display: grid;
+  gap: 6px;
+  min-width: 110px;
+  color: #c8d2e4;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.toolbar-select {
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 8px 10px;
+  color: #f8fafc;
+  background: rgba(255, 255, 255, 0.05);
+  outline: none;
+}
+
+.toolbar-helper {
+  margin: 0 0 14px;
+  color: #97a2b8;
+  line-height: 1.6;
+}
+
+.editor-canvas {
+  border-radius: 24px;
+  background: #ffffff;
+  min-height: 520px;
+  padding: 60px 60px 40px;
+  transition: padding 160ms ease;
+}
+
 .actions-row,
 .guided-controls {
   display: flex;
@@ -618,6 +660,7 @@ input {
   background: #ffffff;
   padding: 28px;
   min-height: 520px;
+  transition: padding 160ms ease;
 }
 
 .preview-text {
@@ -642,6 +685,14 @@ input {
 
 .preview-centered {
   text-align: center;
+}
+
+.preview-right {
+  text-align: right;
+}
+
+.preview-justify {
+  text-align: justify;
 }
 
 .preview-text ul {

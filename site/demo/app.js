@@ -5,6 +5,27 @@ pdfjsLib.GlobalWorkerOptions.workerSrc =
 
 const API_BASE_URL = "https://simapply-relay.onrender.com"
 
+const MARGIN_PRESETS = {
+  narrow: { top: 36, right: 36, bottom: 36, left: 36 },
+  normal: { top: 60, right: 60, bottom: 40, left: 60 },
+  moderate: { top: 72, right: 72, bottom: 56, left: 72 },
+  wide: { top: 90, right: 90, bottom: 72, left: 90 }
+}
+
+const COLOR_MAP = {
+  black: "#0f1728",
+  slate: "#475569",
+  blue: "#2563eb",
+  green: "#15803d",
+  red: "#dc2626"
+}
+
+const FONT_MAP = {
+  serif: '"Georgia", "Times New Roman", serif',
+  sans: '"Avenir Next", "Segoe UI", "Helvetica Neue", Arial, sans-serif',
+  mono: '"SFMono-Regular", "Menlo", "Monaco", monospace'
+}
+
 const state = {
   inputMode: "upload",
   sourceResumeText: "",
@@ -14,7 +35,10 @@ const state = {
   insights: null,
   activeTab: "assistant",
   appliedSuggestionIds: new Set(),
-  guidedResult: null
+  guidedResult: null,
+  history: [""],
+  historyIndex: 0,
+  marginPreset: "normal"
 }
 
 const elements = {
@@ -31,12 +55,20 @@ const elements = {
   startOver: document.getElementById("start-over"),
   tabButtons: Array.from(document.querySelectorAll(".tab-button")),
   toolbarButtons: Array.from(document.querySelectorAll(".toolbar-button")),
+  fontSelect: document.getElementById("font-select"),
+  sizeSelect: document.getElementById("size-select"),
+  colorSelect: document.getElementById("color-select"),
+  marginSelect: document.getElementById("margin-select"),
+  spacingSelect: document.getElementById("spacing-select"),
+  bulletSelect: document.getElementById("bullet-select"),
   tabPanels: {
     assistant: document.getElementById("assistant-tab"),
     edit: document.getElementById("edit-tab"),
     preview: document.getElementById("preview-tab")
   },
   editText: document.getElementById("edit-text"),
+  editorCanvas: document.getElementById("editor-canvas"),
+  previewPaper: document.getElementById("preview-paper"),
   previewText: document.getElementById("preview-text"),
   matchLabel: document.getElementById("match-label"),
   matchSummary: document.getElementById("match-summary"),
@@ -51,21 +83,12 @@ const elements = {
 }
 
 function escapeHtml(value) {
-  return value
+  return String(value)
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;")
-}
-
-function renderInlineFormatting(text) {
-  return escapeHtml(text)
-    .replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g, '<a href="$2" target="_blank" rel="noreferrer">$1</a>')
-    .replace(/\*\*\*([^*]+)\*\*\*/g, "<strong><em>$1</em></strong>")
-    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
-    .replace(/\*([^*]+)\*/g, "<em>$1</em>")
-    .replace(/__([^_]+)__/g, "<u>$1</u>")
 }
 
 function getToneClass(tone) {
@@ -107,6 +130,54 @@ function updateContinueButton() {
       : Boolean(elements.resumeText.value.trim())
 
   elements.continueButton.disabled = !canContinue
+}
+
+function recordHistory(value) {
+  const current = state.history[state.historyIndex]
+  if (current === value) return
+  state.history = state.history.slice(0, state.historyIndex + 1)
+  state.history.push(value)
+  state.historyIndex = state.history.length - 1
+}
+
+function setEditedText(nextText, options = {}) {
+  const { preserveSelection = false, skipHistory = false } = options
+  const textarea = elements.editText
+  const start = textarea.selectionStart
+  const end = textarea.selectionEnd
+
+  state.editedResumeText = nextText
+  textarea.value = nextText
+
+  if (preserveSelection) {
+    const safeStart = Math.min(start, nextText.length)
+    const safeEnd = Math.min(end, nextText.length)
+    textarea.setSelectionRange(safeStart, safeEnd)
+  }
+
+  renderPreview()
+
+  if (!skipHistory) {
+    recordHistory(nextText)
+  }
+}
+
+function applyHistory(direction) {
+  const nextIndex = state.historyIndex + direction
+  if (nextIndex < 0 || nextIndex >= state.history.length) return
+  state.historyIndex = nextIndex
+  setEditedText(state.history[state.historyIndex], { skipHistory: true })
+}
+
+function updateMarginLayout() {
+  const preset = MARGIN_PRESETS[state.marginPreset] || MARGIN_PRESETS.normal
+  const paddingValue = `${preset.top}px ${preset.right}px ${preset.bottom}px ${preset.left}px`
+
+  elements.editorCanvas.dataset.margin = state.marginPreset
+  elements.previewPaper.dataset.margin = state.marginPreset
+  elements.editorCanvas.style.padding = paddingValue
+  elements.previewPaper.style.padding = paddingValue
+  elements.marginSelect.value = state.marginPreset
 }
 
 async function extractResumeTextFromPdf(file) {
@@ -174,16 +245,201 @@ function applySuggestion(item, nextText) {
 
   const lines = state.editedResumeText.split("\n")
   const index = lines.findIndex((line) => line === sourceLine)
+
   if (index === -1) return
 
   lines[index] = nextText
-  state.editedResumeText = lines.join("\n")
   state.appliedSuggestionIds.add(item.id)
-  elements.editText.value = state.editedResumeText
-  renderPreview()
+  setEditedText(lines.join("\n"))
   renderReviewList()
   state.activeTab = "edit"
   renderTabs()
+}
+
+function parseInlineSegments(text, inherited = {}) {
+  const segments = []
+  let remaining = text
+
+  function append(items) {
+    items.forEach((item) => {
+      if (!item.text) return
+      const last = segments[segments.length - 1]
+      if (
+        last &&
+        last.bold === item.bold &&
+        last.italic === item.italic &&
+        last.underline === item.underline &&
+        last.link === item.link &&
+        last.align === item.align &&
+        last.indent === item.indent &&
+        last.color === item.color &&
+        last.fontFamily === item.fontFamily &&
+        last.fontSize === item.fontSize
+      ) {
+        last.text += item.text
+      } else {
+        segments.push(item)
+      }
+    })
+  }
+
+  while (remaining.length > 0) {
+    const indentMatch = remaining.match(/^\[INDENT:(.+?)\]/)
+    if (indentMatch) {
+      append(parseInlineSegments(indentMatch[1], { ...inherited, indent: true }))
+      remaining = remaining.slice(indentMatch[0].length)
+      continue
+    }
+
+    const colorMatch = remaining.match(/^\[COLOR:([a-zA-Z0-9#-]+):(.+?)\]/)
+    if (colorMatch) {
+      append(parseInlineSegments(colorMatch[2], { ...inherited, color: colorMatch[1].trim() }))
+      remaining = remaining.slice(colorMatch[0].length)
+      continue
+    }
+
+    const fontMatch = remaining.match(/^\[FONT:(serif|sans|mono):(.+?)\]/)
+    if (fontMatch) {
+      append(parseInlineSegments(fontMatch[2], { ...inherited, fontFamily: fontMatch[1].trim() }))
+      remaining = remaining.slice(fontMatch[0].length)
+      continue
+    }
+
+    const sizeMatch = remaining.match(/^\[SIZE:([0-9.]+):(.+?)\]/)
+    if (sizeMatch) {
+      append(parseInlineSegments(sizeMatch[2], { ...inherited, fontSize: sizeMatch[1].trim() }))
+      remaining = remaining.slice(sizeMatch[0].length)
+      continue
+    }
+
+    const leftMatch = remaining.match(/^\[L:(.+?)\]/)
+    if (leftMatch) {
+      append(parseInlineSegments(leftMatch[1], { ...inherited, align: "left" }))
+      remaining = remaining.slice(leftMatch[0].length)
+      continue
+    }
+
+    const centerMatch = remaining.match(/^\[C:(.+?)\]/)
+    if (centerMatch) {
+      append(parseInlineSegments(centerMatch[1], { ...inherited, align: "center" }))
+      remaining = remaining.slice(centerMatch[0].length)
+      continue
+    }
+
+    const rightMatch = remaining.match(/^\[R:(.+?)\]/)
+    if (rightMatch) {
+      append(parseInlineSegments(rightMatch[1], { ...inherited, align: "right" }))
+      remaining = remaining.slice(rightMatch[0].length)
+      continue
+    }
+
+    const linkMatch = remaining.match(/^\[([^\]]+)\]\(([^)]+)\)/)
+    if (linkMatch) {
+      append(parseInlineSegments(linkMatch[1], { ...inherited, link: linkMatch[2], underline: true }))
+      remaining = remaining.slice(linkMatch[0].length)
+      continue
+    }
+
+    const boldItalicMatch = remaining.match(/^\*\*\*(.+?)\*\*\*/)
+    if (boldItalicMatch) {
+      append(parseInlineSegments(boldItalicMatch[1], { ...inherited, bold: true, italic: true }))
+      remaining = remaining.slice(boldItalicMatch[0].length)
+      continue
+    }
+
+    const boldMatch = remaining.match(/^\*\*(.+?)\*\*/)
+    if (boldMatch) {
+      append(parseInlineSegments(boldMatch[1], { ...inherited, bold: true }))
+      remaining = remaining.slice(boldMatch[0].length)
+      continue
+    }
+
+    const italicMatch = remaining.match(/^\*([^*]+?)\*/)
+    if (italicMatch) {
+      append(parseInlineSegments(italicMatch[1], { ...inherited, italic: true }))
+      remaining = remaining.slice(italicMatch[0].length)
+      continue
+    }
+
+    const underlineMatch = remaining.match(/^__([\s\S]+?)__/)
+    if (underlineMatch) {
+      append(parseInlineSegments(underlineMatch[1], { ...inherited, underline: true }))
+      remaining = remaining.slice(underlineMatch[0].length)
+      continue
+    }
+
+    const nextMarker = remaining.search(/(\*\*\*|\*\*|\*|__|\[)/)
+    if (nextMarker === -1) {
+      append([{ text: remaining, ...inherited }])
+      break
+    }
+
+    if (nextMarker > 0) {
+      append([{ text: remaining.slice(0, nextMarker), ...inherited }])
+      remaining = remaining.slice(nextMarker)
+      continue
+    }
+
+    append([{ text: remaining[0], ...inherited }])
+    remaining = remaining.slice(1)
+  }
+
+  return segments
+}
+
+function getLineMeta(line) {
+  let workingLine = line.trim()
+  let alignment = "left"
+  let spacing = null
+
+  const spacingMatch = workingLine.match(/^\[SPACING:([0-9.]+)\]/)
+  if (spacingMatch) {
+    spacing = spacingMatch[1]
+    workingLine = workingLine.replace(/^\[SPACING:[^\]]+\]\s*/, "")
+  }
+
+  if (workingLine.startsWith("[CENTER]")) {
+    alignment = "center"
+    workingLine = workingLine.replace("[CENTER]", "").trim()
+  } else if (workingLine.startsWith("[JUSTIFY]")) {
+    alignment = "justify"
+    workingLine = workingLine.replace("[JUSTIFY]", "").trim()
+  }
+
+  return { cleanedLine: workingLine, alignment, spacing }
+}
+
+function renderSegments(segments) {
+  return segments
+    .map((segment) => {
+      const styles = []
+
+      if (segment.color) {
+        styles.push(`color:${COLOR_MAP[segment.color] || segment.color}`)
+      }
+      if (segment.fontFamily) {
+        styles.push(`font-family:${FONT_MAP[segment.fontFamily] || FONT_MAP.sans}`)
+      }
+      if (segment.fontSize) {
+        styles.push(`font-size:${segment.fontSize}pt`)
+      }
+      if (segment.indent) {
+        styles.push("padding-left:2rem;display:inline-block")
+      }
+
+      const styleAttr = styles.length ? ` style="${styles.join(";")}"` : ""
+      let content = escapeHtml(segment.text)
+
+      if (segment.link) {
+        content = `<a href="${escapeHtml(segment.link)}" target="_blank" rel="noreferrer">${content}</a>`
+      }
+      if (segment.underline) content = `<u>${content}</u>`
+      if (segment.italic) content = `<em>${content}</em>`
+      if (segment.bold) content = `<strong>${content}</strong>`
+
+      return `<span${styleAttr}>${content}</span>`
+    })
+    .join("")
 }
 
 function renderPreview() {
@@ -198,28 +454,39 @@ function renderPreview() {
   }
 
   lines.forEach((line) => {
-    const trimmed = line.trim()
-
-    if (!trimmed) {
+    if (!line.trim()) {
       flushList()
       return
     }
 
-    const isCentered = trimmed.startsWith("[CENTER]")
-    const centeredText = isCentered ? trimmed.replace("[CENTER]", "").trim() : trimmed
-    const formatted = renderInlineFormatting(centeredText)
+    const { cleanedLine, alignment, spacing } = getLineMeta(line)
+    const bulletMatch = cleanedLine.match(/^([•●⬤▸★✓■◆-])\s*/)
+    const bulletValue = bulletMatch?.[1] || null
+    const lineContent = bulletValue
+      ? cleanedLine.replace(/^([•●⬤▸★✓■◆-])\s*/, "")
+      : cleanedLine
+    const segments = parseInlineSegments(lineContent)
+    const segmentAlignment =
+      segments.find((segment) => segment.align)?.align || alignment
+    const rendered = renderSegments(segments)
 
-    if (/^[•-]\s*/.test(centeredText)) {
-      currentList.push(
-        `<li>${formatted.replace(/^[•-]\s*/, "")}</li>`
-      )
+    const styleAttr = spacing ? ` style="line-height:${spacing}"` : ""
+    const className =
+      segmentAlignment === "center"
+        ? "preview-centered"
+        : segmentAlignment === "right"
+          ? "preview-right"
+          : segmentAlignment === "justify"
+            ? "preview-justify"
+            : "preview-left"
+
+    if (bulletValue) {
+      currentList.push(`<li${styleAttr}>${rendered}</li>`)
       return
     }
 
     flushList()
-    parts.push(
-      `<p class="${isCentered ? "preview-centered" : ""}">${formatted}</p>`
-    )
+    parts.push(`<p class="${className}"${styleAttr}>${rendered}</p>`)
   })
 
   flushList()
@@ -234,8 +501,7 @@ function wrapSelection(prefix, suffix = prefix) {
   const replacement = `${prefix}${selected}${suffix}`
 
   textarea.setRangeText(replacement, start, end, "select")
-  state.editedResumeText = textarea.value
-  renderPreview()
+  setEditedText(textarea.value, { preserveSelection: true })
 }
 
 function applyLinePrefix(prefix) {
@@ -253,12 +519,58 @@ function applyLinePrefix(prefix) {
     .join("\n")
 
   textarea.setRangeText(nextBlock, lineStart, sliceEnd, "select")
-  state.editedResumeText = textarea.value
-  renderPreview()
+  setEditedText(textarea.value, { preserveSelection: true })
 }
 
-function applyToolbarAction(format) {
+function applyLineWrapper(prefix, suffix = "]") {
+  const textarea = elements.editText
+  const start = textarea.selectionStart
+  const end = textarea.selectionEnd
+  const value = textarea.value
+  const lineStart = value.lastIndexOf("\n", start - 1) + 1
+  const lineEnd = value.indexOf("\n", end)
+  const sliceEnd = lineEnd === -1 ? value.length : lineEnd
+  const block = value.slice(lineStart, sliceEnd)
+  const nextBlock = block
+    .split("\n")
+    .map((line) => {
+      if (!line.trim()) return line
+      return `${prefix}${line}${suffix}`
+    })
+    .join("\n")
+
+  textarea.setRangeText(nextBlock, lineStart, sliceEnd, "select")
+  setEditedText(textarea.value, { preserveSelection: true })
+}
+
+function applyStyleSelection(tag, value) {
+  const textarea = elements.editText
+  const start = textarea.selectionStart
+  const end = textarea.selectionEnd
+  if (start === end) return
+
+  const selected = textarea.value.slice(start, end)
+  const replacement = selected
+    .split("\n")
+    .map((line) => (line.trim() ? `[${tag}:${value}:${line}]` : line))
+    .join("\n")
+
+  textarea.setRangeText(replacement, start, end, "select")
+  setEditedText(textarea.value, { preserveSelection: true })
+}
+
+function applyToolbarAction(format, value = "") {
   elements.editText.focus()
+
+  if (format === "undo") {
+    applyHistory(-1)
+    return
+  }
+
+  if (format === "redo") {
+    applyHistory(1)
+    return
+  }
 
   if (format === "bold") {
     wrapSelection("**")
@@ -272,16 +584,6 @@ function applyToolbarAction(format) {
 
   if (format === "underline") {
     wrapSelection("__")
-    return
-  }
-
-  if (format === "bullet") {
-    applyLinePrefix("• ")
-    return
-  }
-
-  if (format === "center") {
-    applyLinePrefix("[CENTER]")
     return
   }
 
@@ -299,8 +601,57 @@ function applyToolbarAction(format) {
       end,
       "select"
     )
-    state.editedResumeText = textarea.value
-    renderPreview()
+    setEditedText(textarea.value, { preserveSelection: true })
+    return
+  }
+
+  if (format === "left") {
+    applyLineWrapper("[L:")
+    return
+  }
+
+  if (format === "center") {
+    applyLineWrapper("[C:")
+    return
+  }
+
+  if (format === "right") {
+    applyLineWrapper("[R:")
+    return
+  }
+
+  if (format === "justify") {
+    applyLinePrefix("[JUSTIFY] ")
+    return
+  }
+
+  if (format === "indent") {
+    applyLineWrapper("[INDENT:")
+    return
+  }
+
+  if (format === "font" && value) {
+    applyStyleSelection("FONT", value)
+    return
+  }
+
+  if (format === "size" && value) {
+    applyStyleSelection("SIZE", value)
+    return
+  }
+
+  if (format === "color" && value) {
+    applyStyleSelection("COLOR", value)
+    return
+  }
+
+  if (format === "spacing" && value) {
+    applyLinePrefix(`[SPACING:${value}] `)
+    return
+  }
+
+  if (format === "bullet") {
+    applyLinePrefix(`${value || "•"} `)
   }
 }
 
@@ -361,9 +712,7 @@ function renderGuidedResult() {
   const applyButton = document.getElementById("apply-guided-draft")
   if (applyButton) {
     applyButton.addEventListener("click", () => {
-      state.editedResumeText = suggestedResumeText
-      elements.editText.value = state.editedResumeText
-      renderPreview()
+      setEditedText(suggestedResumeText || "")
       state.activeTab = "edit"
       renderTabs()
     })
@@ -371,9 +720,7 @@ function renderGuidedResult() {
 }
 
 async function handleLineRewrite(item) {
-  const button = document.querySelector(
-    `[data-rewrite-id="${item.id}"]`
-  )
+  const button = document.querySelector(`[data-rewrite-id="${item.id}"]`)
 
   if (button) {
     button.disabled = true
@@ -398,7 +745,6 @@ async function handleLineRewrite(item) {
     if (button) {
       button.textContent = error instanceof Error ? error.message : "Try again"
     }
-    return
   }
 }
 
@@ -406,7 +752,8 @@ function renderReviewList() {
   const items = state.insights?.reviewItems || []
 
   if (!items.length) {
-    elements.reviewList.innerHTML = `<div class="review-card warn"><p class="review-reason">No review items yet. Upload a resume and continue to run AI analysis.</p></div>`
+    elements.reviewList.innerHTML =
+      `<div class="review-card warn"><p class="review-reason">No review items yet. Upload a resume and continue to run AI analysis.</p></div>`
     return
   }
 
@@ -415,9 +762,7 @@ function renderReviewList() {
       const typeLabel = getReviewTypeLabel(item.type)
       const suggestionBlock =
         item.type !== "good" && item.suggestedText
-          ? `<p class="review-suggestion"><strong>Suggested fix:</strong> ${escapeHtml(
-              item.suggestedText
-            )}</p>`
+          ? `<p class="review-suggestion"><strong>Suggested fix:</strong> ${escapeHtml(item.suggestedText)}</p>`
           : ""
 
       const actionButtons =
@@ -488,10 +833,12 @@ async function runAnalysis() {
   state.guidedResult = null
   renderGuidedResult()
   elements.matchLabel.textContent = "Thinking..."
-  elements.matchSummary.textContent = "Running AI analysis against the current resume and job description."
+  elements.matchSummary.textContent =
+    "Running AI analysis against the current resume and job description."
   elements.matchTonePill.textContent = "Loading"
   elements.matchTonePill.className = "tone-pill tone-medium"
-  elements.reviewList.innerHTML = `<div class="review-card warn"><p class="review-reason">Reviewing the resume...</p></div>`
+  elements.reviewList.innerHTML =
+    `<div class="review-card warn"><p class="review-reason">Reviewing the resume...</p></div>`
 
   try {
     const result = await fetchJson("/analyze", {
@@ -502,9 +849,10 @@ async function runAnalysis() {
     state.insights = result.insights
     renderInsights()
   } catch (error) {
-    elements.reviewList.innerHTML = `<div class="review-card fix"><p class="review-reason">${escapeHtml(
-      error instanceof Error ? error.message : "AI review failed"
-    )}</p></div>`
+    elements.reviewList.innerHTML =
+      `<div class="review-card fix"><p class="review-reason">${escapeHtml(
+        error instanceof Error ? error.message : "AI review failed"
+      )}</p></div>`
   }
 }
 
@@ -524,6 +872,8 @@ async function handleContinue() {
 
     state.editedResumeText = state.sourceResumeText
     elements.editText.value = state.editedResumeText
+    state.history = [state.editedResumeText]
+    state.historyIndex = 0
     renderPreview()
     elements.uploadView.classList.add("hidden")
     elements.workspaceView.classList.remove("hidden")
@@ -584,13 +934,24 @@ function resetDemo() {
   state.insights = null
   state.guidedResult = null
   state.appliedSuggestionIds = new Set()
+  state.history = [""]
+  state.historyIndex = 0
+  state.marginPreset = "normal"
   elements.fileInput.value = ""
   elements.fileName.textContent = "Choose a PDF resume"
   elements.resumeText.value = ""
   elements.jobDescription.value = ""
   elements.editText.value = ""
   elements.guidedRequest.value = ""
+  elements.fontSelect.value = ""
+  elements.sizeSelect.value = ""
+  elements.colorSelect.value = ""
+  elements.marginSelect.value = "normal"
+  elements.spacingSelect.value = ""
+  elements.bulletSelect.value = ""
   renderGuidedResult()
+  updateMarginLayout()
+  renderPreview()
   elements.uploadView.classList.remove("hidden")
   elements.workspaceView.classList.add("hidden")
   updateContinueButton()
@@ -605,9 +966,7 @@ elements.modeButtons.forEach((button) => {
 
 elements.fileInput.addEventListener("change", (event) => {
   state.file = event.target.files?.[0] || null
-  elements.fileName.textContent = state.file
-    ? state.file.name
-    : "Choose a PDF resume"
+  elements.fileName.textContent = state.file ? state.file.name : "Choose a PDF resume"
   updateContinueButton()
 })
 
@@ -629,14 +988,48 @@ elements.tabButtons.forEach((button) => {
 })
 
 elements.editText.addEventListener("input", () => {
-  state.editedResumeText = elements.editText.value
-  renderPreview()
+  setEditedText(elements.editText.value)
 })
 
 elements.toolbarButtons.forEach((button) => {
   button.addEventListener("click", () => {
     applyToolbarAction(button.dataset.format)
   })
+})
+
+elements.fontSelect.addEventListener("change", () => {
+  if (!elements.fontSelect.value) return
+  applyToolbarAction("font", elements.fontSelect.value)
+  elements.fontSelect.value = ""
+})
+
+elements.sizeSelect.addEventListener("change", () => {
+  if (!elements.sizeSelect.value) return
+  applyToolbarAction("size", elements.sizeSelect.value)
+  elements.sizeSelect.value = ""
+})
+
+elements.colorSelect.addEventListener("change", () => {
+  if (!elements.colorSelect.value) return
+  applyToolbarAction("color", elements.colorSelect.value)
+  elements.colorSelect.value = ""
+})
+
+elements.marginSelect.addEventListener("change", () => {
+  state.marginPreset = elements.marginSelect.value || "normal"
+  updateMarginLayout()
+})
+
+elements.spacingSelect.addEventListener("change", () => {
+  if (!elements.spacingSelect.value) return
+  applyToolbarAction("spacing", elements.spacingSelect.value)
+  elements.spacingSelect.value = ""
+})
+
+elements.bulletSelect.addEventListener("change", () => {
+  if (!elements.bulletSelect.value) return
+  applyToolbarAction("bullet", elements.bulletSelect.value)
+  elements.bulletSelect.value = ""
 })
 
 elements.guidedSubmit.addEventListener("click", handleGuidedRequest)
@@ -649,4 +1042,5 @@ elements.presetButtons.forEach((button) => {
 
 renderMode()
 renderTabs()
+updateMarginLayout()
 renderPreview()
