@@ -6,10 +6,10 @@ pdfjsLib.GlobalWorkerOptions.workerSrc =
 const API_BASE_URL = "https://simapply-relay.onrender.com"
 
 const MARGIN_PRESETS = {
-  narrow: { top: 36, right: 36, bottom: 36, left: 36 },
-  normal: { top: 60, right: 60, bottom: 40, left: 60 },
+  narrow: { top: 24, right: 24, bottom: 24, left: 24 },
+  normal: { top: 48, right: 48, bottom: 40, left: 48 },
   moderate: { top: 72, right: 72, bottom: 56, left: 72 },
-  wide: { top: 90, right: 90, bottom: 72, left: 90 }
+  wide: { top: 108, right: 108, bottom: 84, left: 108 }
 }
 
 const COLOR_MAP = {
@@ -576,8 +576,12 @@ function renderPreview() {
     flushList()
 
     if (hasGroupedAlignment) {
+      const splitClass =
+        centerSegments.length > 0
+          ? "preview-split-line preview-split-three"
+          : "preview-split-line preview-split-two"
       parts.push(`
-        <div class="preview-split-line"${styleAttr}>
+        <div class="${splitClass}"${styleAttr}>
           <span class="preview-split-left">${renderSegments(leftSegments)}</span>
           <span class="preview-split-center">${renderSegments(centerSegments)}</span>
           <span class="preview-split-right">${renderSegments(rightSegments)}</span>
